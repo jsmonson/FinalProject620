@@ -112,23 +112,19 @@ endclass // MemoryTransaction
   endclass
   
   class Driver;
-      mailbox #(MemoryTransaction) gen2agt, agt2drv;
+      mailbox #(MemoryTransaction) agt2drv;
       MemoryTransaction tr;
-      event gen2agths, agt2drvhs;
-      function new(input mailbox #(MemoryTransaction) gen2agt, agt2drv, input event gen2agths,  agt2drvhs);
-        this.gen2agt = gen2agt;
+      event agt2drvhs; // mailbox synchronization
+      function new(input mailbox #(RISC_Transaction) agt2drv, input event agt2drvhs);
         this.agt2drv = agt2drv;
-        this.gen2agths = gen2agths;
         this.agt2drvhs = agt2drvhs;
-      endfunction
-      task run(int count);
-        repeat(count) begin
-            gen2agt.get(tr);
-            ->gen2agths;
-            agt2drv.put(tr);
-            wait (agt2drvhs.triggered);            
-        end
-      endtask
+	  endfunction
+      task run(input int count);
+		agt2drv.get(tr);
+		->agt2drvhs; // tell agent that transaction has been driven onto DUT
+		$root.top.risc_if.data_out <= {4'hF,random_val()}; // random data with halt	 
+		@$root.top.risc_if.cb;	 
+    endtask
   endclass
   // Will have to merge our environments...
    class Environment;
@@ -146,7 +142,7 @@ endclass // MemoryTransaction
       agt2drv = new(1);
       gen = new(gen2agt,gen2agths);
       agt = new(gen2agt,agt2drv, gen2agths,agt2drvhs);
-      drv = new(gen2agt,agt2drv, gen2agths,agt2drvhs);
+      drv = new(agt2drv,agt2drvhs);
     endfunction
   
     task run();
