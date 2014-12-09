@@ -6,7 +6,10 @@ class MemoryTransaction;
    bit [15:0] DataIn;
    bit 	      we;
    bit 	      isInstr;
+   rand bit rst;
 
+   constraint c_rst { rst==0; };
+      
    //Instruction Helper Functions   
    function bit [3:0] Opcode();
       return DataOut[15:12];
