@@ -3,6 +3,10 @@
     Agent agt;
     Driver drv;
     mailbox #(MemoryTransaction) gen2agt, agt2drv, agt2scb;
+	int mem_access_cnt[Opcodes] = '{BR:1, ADD:1, LD:2, ST:2,
+									   JSR:1, AND:1, LDR:2, STR:2,
+									   RTI:2, NOT:1:, LDI:3, STI:3,
+									   JMP:1, RES:1, LEA:1, TRAP:2};
     int count;
     event gen2agths, agt2drvhs, agt2scbhs, chk2gen;
     function new(int count);
