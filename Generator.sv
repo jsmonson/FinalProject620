@@ -11,8 +11,12 @@
         repeat(count) begin
             tr = new();
             `SV_RAND_CHECK(tr.randomize());
+			tr.isInstr = 1'b1;
             gen2agt.put(tr);
-            wait (gen2agths.triggered);
+			int tr_num =  mem_access_cnt[Opcodes'(tr.DataOut[15:12])];
+			repeat(tr_num) begin
+				
+			end
         end
     endtask
   endclass

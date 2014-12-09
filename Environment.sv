@@ -12,7 +12,7 @@
       gen2agt = new(1);
       agt2drv = new(1);
 	  agt2scb = new(1);
-      gen = new(gen2agt,gen2agths, chk2gen);
+      gen = new(gen2agt,gen2agths, chk2gen,mem_access_cnt);
       agt = new(gen2agt,agt2drv, agt2scb, gen2agths,agt2drvhs,agt2scbhs);
       drv = new(agt2drv,agt2drvhs);
     endfunction
