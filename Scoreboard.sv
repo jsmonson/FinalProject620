@@ -17,10 +17,9 @@ class Scoreboard;
    bit [15:0] PC;
    bit N,Z,P;
 
-   //Memory Transaction Queues
-   bit [15:0] AddressQueue[$];
-   bit [15:0] DataQueue[$];
-   
+   mailbox #(MemoryTransaction) Agt2SB;
+   mailbox #(MemoryTransaction) SB2Chk;
+      
    //Sign/Zero Extenders
    Ext #(5) Ext5;
    Ext #(6) Ext6;
@@ -29,13 +28,17 @@ class Scoreboard;
    Ext #(11) Ext11;
     
    function new ();
+      reset_sb();
+   endfunction // new
+
+   function reset_sb();
       //Start with Reset Program State
       PC = 16'd0;
       NZP = 3'b000;
       foreach RegFile[i]
 	RegFile[i] = 16'd0;
-   endfunction // new
-
+   endfunction // reset_sb
+   
    function automatic void Update(Instruction I);
       incrPC();
       case (I.Opcode) 

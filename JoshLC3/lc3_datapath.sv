@@ -1,10 +1,14 @@
 `default_nettype none
 module lc3_datapath ( clk, rst, 
-                     IR_OUT, N_OUT, Z_OUT, P_OUT,  
+                     IR_OUT, N_OUT, Z_OUT, P_OUT, PRIV,  
                      aluControl, enaALU, SR1, SR2,
                      DR, logicWE, selPC, enaMARM, selMAR,
 		     selEAB1, selEAB2, enaPC, ldPC, ldIR,
-	             ldMAR, ldMDR, selMDR, flagWE, enaMDR, 
+	             ldMAR, ldMDR, selMDR, flagWE, enaMDR,
+		     enaPSR, enaPCM1, enaSP, enaVector,
+		     ldSavedUSP, ldSavedSSP, ldPriority, ldVector, ldCC,
+		     selSPMUX, selPSRMUX, selVectorMUX,
+		     interruptPriority, INTV,
                      memory_din, memory_dout, memory_addr); 
 input logic clk;
 input logic rst;
@@ -39,12 +43,16 @@ output logic P_OUT;
 output logic [15:0] memory_din;
 output logic [15:0] memory_addr; 
 
-
 //Datapath Registers 
 logic [15:0] PC;
 logic [15:0] IR;
 logic [15:0] MAR;
 logic [15:0] MDR;
+logic [15:0] PSR;
+logic [15:0] SavedUSP;
+logic [15:0] SavedSSP;
+logic [2:0] NZP;   
+
 logic N, Z, P;
 logic [15:0] REGFILE [0:7];
 
@@ -59,7 +67,10 @@ logic [15:0] MDRMUX;
 logic [15:0] ADDR1MUX; 
 logic [15:0] ADDR2MUX;
 logic [15:0] SR2MUX;
-
+logic [15:0] PSRMUX;
+logic [15:0] SPMUX;
+  
+   
 //Arithmetic Units
 logic [15:0] ADDER;
 logic [15:0] PCINCR; 
@@ -80,9 +91,9 @@ logic [15:0] ZEXT;
 logic [15:0] memOut; 
 
 assign IR_OUT = IR; 
-assign N_OUT = N; 
-assign Z_OUT = Z;
-assign P_OUT = P; 
+assign N_OUT = PSR[2]; 
+assign Z_OUT = PSR[1];
+assign P_OUT = PSR[0]; 
 
 assign memOut = memory_dout; 
 assign memory_din = MDR; 
@@ -101,6 +112,37 @@ always_ff @ (posedge clk iff rst == 0 or posedge rst) begin
 end
 
 /************************************
+ Program Status Register 
+************************************/
+
+always_ff @ (posedge clk iff rst == 0 or posedge rst) begin
+   if(rst == 1'b1) begin
+      PSR <= 16'd0;
+   end else begin
+      if(ldCC)
+	PSR[2:0] <= PSRMUX[2:0];
+      if(ldPriority)
+	PSR[10:8] <= PSRMUX[10:8];
+      if(ldPriv)
+	PSR[15] <= PSRMUX[15];     
+   end
+end
+
+assign INT <= InterruptPriority > PSR[10:8];
+assign PRIV <= PSR[15];
+   
+/************************************
+ Program Status Register MUX
+************************************/   
+
+always_comb begin
+   if(selPSRMUX == 1'b1)
+     PSRMUX = { SetPriv, {4{1'b0}}, InterruptPriority, {5{1'b0}}, NZP};
+   else
+     PSRMUX = { BUSS[15],  {4{1'b0}}, BUSS[10:8], {5{1'b0}}, BUSS[2:0]);
+end
+  
+/************************************
  Program Counter MUX 
 ************************************/
 
@@ -115,18 +157,45 @@ always_comb begin
   endcase
 end
 
+
+   
 /************************************
- Memory 
+ Stack Pointer Registers & MUXES
 ************************************/
+   
+always_ff @ (posedge clk iff rst==0 or posedge rst) begin
+   if(rst) begin
+      SavedUSP <= 16'd0;
+      SavedSSP <= 16'd0;
+   end else begin
+      if(ldSavedUSP)
+	SavedUSP <= SR1;
+      if(ldSavedSSP)
+	SavedSSP <= SR1;   
+   end
 
-//always @(posedge clk)
-//begin
-//  if (memWE)
-//    MEMORY[MAR] <= MDR; 
-//end 
+always_comb begin
+   unique case (selSPMUX)
+     2'b00: SPMUX = SavedSSP;
+     2'b01: SPMUX = SR1 - 1;
+     2'b10: SPMUX = SR1 + 1;
+     2'b11: SPMUX = SavedUSP;
+   endcase // unique case (selSPMUX)
+end      
 
-//assign memOut = MEMORY[MAR]; 
-
+/************************************
+ Vector MUX
+************************************/
+  
+   always_comb begin
+     unique case (selVectorMUX)
+       2'b00: VectorMUX = { 8'h01,INTV};
+       2'b01: VectorMUX = 8'h0100;
+       2'b10: VectorMUX = 8'h0101;
+     endcase // unique case (selVectorMUX)
+  end
+   
+      
 /************************************
  MAR 
 ************************************/
@@ -216,6 +285,12 @@ assign SR2MUX = (IR[5]) ? SEXT4 : RB;
 assign MDRMUX = (selMDR) ? memOut : BUSS; 
 
 /************************************
+ PC Minus 1 
+************************************/
+
+assign PC_MINUS_1 = PC - 1;
+   
+/************************************
  ALU 
 ************************************/
 
@@ -231,7 +306,9 @@ always_comb
  NZP Logic 
 ************************************/
 
-always_ff @ (posedge clk) begin
+assign NZP = {N,Z,P};
+  
+always_comb  begin
   if(BUSS == 16'h0000) begin
     N <= 1'b0; Z <= 1'b1; P <= 1'b0; 
   end
@@ -267,5 +344,10 @@ assign BUSS = (enaMARM) ? MARMUX : 16'hZZZZ;
 assign BUSS = (enaPC) ? PC : 16'hZZZZ;
 assign BUSS = (enaALU) ? ALU : 16'hZZZZ;
 assign BUSS = (enaMDR) ? MDR : 16'hZZZZ;
+assign BUSS = (enaPSR) ? PSR : 16'hZZZZ;
+assign BUSS = (enaPCM1) ? PC_MINUS_1 : 16'hZZZZ;
+assign BUSS = (enaSP) ? : 16'hZZZZ;
+assign BUSS = (enaVector) ? : 16'hZZZZ;
+  
 
 endmodule
