@@ -4,12 +4,12 @@ class Checker;
    
    event   GenNextTrans;
 
-   ScoreBoard SB;
+   Scoreboard SB;
    
    function new ( mailbox #(MemoryTransaction) SB2Chki,
 		  mailbox #(MemoryTransaction) Mon2Chki, 
 		  ref event GenNextTransi,
-		  ScoreBoard SBi);
+		  Scoreboard SBi);
       SB2Chk = SB2Chki;
       Mon2Chk = Mon2Chki;
       GenNextTrans = GenNextTransi;

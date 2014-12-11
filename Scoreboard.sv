@@ -1,10 +1,10 @@
-class #(INPUT_SIZE) Ext;
+class Ext #(INPUT_SIZE);
    function automatic bit[15:0] SEXT(input bit [INPUT_SIZE-1:0] toExt);
-      return { {(16-INPUT_SIZE){toExt[INPUT_SIZE-1]}, toExt} };    
+      return { {(16-INPUT_SIZE){toExt[INPUT_SIZE-1]}}, toExt };    
    endfunction // SEXT
 
    function automatic bit[15:0] ZEXT(input bit [INPUT_SIZE-1:0] toExt);
-      return {{(16-INPUT_SIZE){0},toExt}};
+      return {{(16-INPUT_SIZE){0}},toExt};
    endfunction // ZEXT
    
 endclass // Extension
@@ -58,10 +58,10 @@ class Scoreboard;
       
       INT = 1'b0;
       INTV = 8'd0;
-      INTP = 2'b000;
+      INTP = 3'b000;
 
       reset = 0;
-      foreach RegFile[i]
+      foreach (RegFile[i])
 	RegFile[i] = 16'd0;
    endfunction // reset_sb
 
@@ -143,7 +143,7 @@ class Scoreboard;
      if(INT) begin
 	incrPC();
 	LC3_INT();
-     else begin
+     end else begin
 	ReadTransaction(PC);
 	incrPC();
 	case (CurT.Opcode) 
@@ -181,12 +181,13 @@ class Scoreboard;
    
    
    function automatic void setcc(bit [15:0] val);
-      if(val == 16'd0)
+      if(val == 16'd0) begin
 	PSR[2] = 0; PSR[1] = 1; PSR[0] = 0;
-      else if (val[15] == 1'b1)
+      end else if (val[15] == 1'b1) begin
 	PSR[2] = 1; PSR[1] = 0; PSR[0] = 0;
-      else
+      end else begin
 	PSR[2] = 0; PSR[1] = 0; PSR[0] = 1;
+      end
    endfunction // setcc
       
    function automatic void LC3_ADD();
@@ -217,7 +218,7 @@ class Scoreboard;
 	
    endfunction // LC3_AND
 
-   function automatic void LC3_BR()
+   function automatic void LC3_BR();
       if((CurT.n() && PSR[2]) || (CurT.z() && PSR[1]) || (CurT.p() && PSR[0]))
 	PC = PC + Ext9.SEXT(CurT.PCoffset9());
    endfunction // LC3_BR
@@ -229,7 +230,7 @@ class Scoreboard;
 
    function automatic void LC3_JSR();
       RegFile[7] = PC;
-      if(CurT.DataOut[11]=1)
+      if(CurT.DataOut[11]==1)
 	PC = CurT.BaseR();
       else
 	PC = PC + Ext11.SEXT(CurT.PCoffset11());
@@ -255,7 +256,7 @@ class Scoreboard;
       setcc(CurT.DataOut);
    endfunction // LC3_LDR
 
-   function automatic void LC3_LDR();
+   function automatic void LC3_LEA();
       RegFile[CurT.DR()] = PC + Ext9.SEXT(CurT.PCoffset9());
       setcc(RegFile[CurT.DR()]);
    endfunction // LC3_LDR
@@ -327,7 +328,7 @@ class Scoreboard;
       //Update PC With Interrupt or Exception Vector
       ReadTransaction(Vector);
       PC = CurT.DataOut;
-   end // if (INT)
+   endfunction
       
    function automatic void Interrupt();
       

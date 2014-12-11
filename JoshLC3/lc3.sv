@@ -36,7 +36,7 @@ input  logic memRDY;
 
 input logic  [15:0] MemoryMappedIO_in;
 output logic [15:0] MemoryMappedIO_out;
-output logic        MemoryMapped_load;
+output logic        MemoryMappedIO_load;
   
 input logic 	  IRQ;
 input logic [7:0] INTV;

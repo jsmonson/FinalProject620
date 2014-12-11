@@ -36,7 +36,7 @@ input logic enaMDR;
 
 input logic  [15:0] MemoryMappedIO_in;
 output logic [15:0] MemoryMappedIO_out;
-output logic        MemoryMapped_load;
+output logic        MemoryMappedIO_load;
    
 input logic [15:0] memory_dout;
 
@@ -68,17 +68,6 @@ input logic [1:0]   selSPMUX;
 input logic 	    selPSRMUX;
 input logic [1:0]   selVectorMUX;
 input logic 	    SetPriv;
-
-
-input logic [15:0] KBDR;
-input logic [15:0] KBSRi;
-output logic [15:0] KBSRo;   
-output logic [15:0] DDR;
-input logic [15:0] DSRi;
-input logic [15:0] DSRo;    
-output logic    ldKBSR;
-output logic    ldDDR;
-output logic    ldDSR;
 
 input logic 	    IRQ; //Interrupt Request
 input logic [2:0]   INTP; //Interrupt Priority
@@ -351,11 +340,11 @@ always_comb begin
   MemoryMappedIO_load = 1'b0;
    
   //MemoryMappedIO Logic
-  if(MAP >= 16'hFE00 && selMDR == 1'b1) begin
+  if(MAR >= 16'hFE00 && selMDR == 1'b1) begin
      //MemoryMappedIO Read
      memEN = 0;
      selINMUX = 1'b1;    
-     if(memWR == 1'b1) begin
+     if(memWE == 1'b1) begin
        //MemoryMappedIO Write
        MemoryMappedIO_load = 1'b1;
      end
