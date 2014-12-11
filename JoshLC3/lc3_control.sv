@@ -3,11 +3,15 @@
 import lc3Pkg::*;
 
 module lc3_control ( clk, rst, 
-                     IR, N, Z, P,  
+                     IR, N, Z, P, PRIV, 
                      aluControl, enaALU, SR1, SR2,
                      DR, regWE, selPC, enaMARM, selMAR,
 		     selEAB1, selEAB2, enaPC, ldPC, ldIR,
-	             ldMAR, ldMDR, selMDR, memWE, flagWE, enaMDR); 
+		     INT,
+		     enaPSR, enaPCM1, enaSP, enaVector,
+		     ldSavedUSP, ldSavedSSP, ldPriority, ldVector, ldCC, ldPriv,
+		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
+	             ldMAR, ldMDR, selMDR, memWE, flagWE, enaMDR, memRDY); 
 
 input wire clk;
 input wire rst;
@@ -15,8 +19,11 @@ input wire rst;
 input wire [15:0] IR;
 input wire N;
 input wire Z; 
-input wire P; 
-
+input wire P;
+input logic PRIV;
+input wire memRDY;
+input logic INT;
+   
 //Output
 output reg [1:0] aluControl = 2'b00; 
 output reg [2:0] SR1 = 3'b000;
@@ -27,51 +34,40 @@ output reg enaALU = 1'b0;
 output reg enaPC = 1'b0;
 output reg enaMDR = 1'b0;
 output reg enaMARM = 1'b0;
-
+output logic enaPSR;
+output logic enaPCM1;
+output logic enaSP;
+output logic enaVector;
+   
 output reg [1:0] selPC = 2'b00;
 output reg selMAR = 1'b0;
 output reg selEAB1 = 1'b0;
 output reg [1:0] selEAB2 = 2'b00;
 output reg selMDR = 1'b0;
-
+output logic selSPMUX;
+output logic selPSRMUX;
+output logic selVectorMUX;
+output logic SetPriv;
+   
 output reg ldPC = 1'b0;
 output reg ldIR = 1'b0;
 output reg ldMAR = 1'b0;
 output reg ldMDR = 1'b0;
+output logic ldSavedUSP;
+output logic ldSavedSSP;
+output logic ldPriority;
+output logic ldVector;
+output logic ldCC;
+output logic ldPriv;
 
 output reg memWE = 1'b0;
 output reg flagWE = 1'b0;
 output reg regWE = 1'b0;
 
-
 ControlStates CurrentState; 
 ControlStates NextState;
 wire branch_enable; 
 
-/*parameter FETCH0=5'd0, 
-          FETCH1=5'd1, 
-          FETCH2=5'd2, 
-          DECODE=5'd3, 
-          BRANCH0=5'd4, 
-          ADD0=5'd5, 
-          STORE0=5'd7, 
-          STORE1=5'd8,
-          STORE2=5'd9, 
-          JSR0=5'd10, 
-          JSR1=5'd11, 
-          AND0=5'd12, 
-          NOT0=5'd13, 
-          JMP0=5'd14, 
-          LD0=5'd15, 
-          LD1=5'd16, 
-          LD2=5'd17;
-
-parameter BR=4'b0000, ADD=4'b0001, LD=4'b0010, ST=4'b0011,
-          JSR=4'b0100, AND=4'b0101, LDR=4'b0110, STR=4'b0111,
-          RTI=4'b1000, NOT=4'b1001, LDI=4'b1010, STI=4'b1011,
-          JMP=4'b1100, RES=4'b1101, LEA=4'b1110, TRAP=4'b1111;
-
-*/
 assign  branch_enable = ((N == IR[11]) || (Z == IR[10]) || (P == IR[9])) ? 1'b1 : 1'b0; 
 
 always @ (posedge clk or posedge rst) begin
@@ -81,20 +77,26 @@ always @ (posedge clk or posedge rst) begin
   CurrentState <= NextState; 
 end
 
-always @ (CurrentState or IR or 
-          N or Z or P or branch_enable) begin 
+always_comb begin 
   //Tristate Signals
   enaALU <= 1'b0; enaMARM <= 1'b0;
   enaPC <= 1'b0; enaMDR <= 1'b0;
-
+  enaPSR <= 1'b0; enaPCM1 <= 1'b0;
+  enaSP <= 1'b0; enaVector <= 1'b0;
+   
   //Register Load Signals  
   ldPC <= 1'b0; ldIR <= 1'b0;
-  ldMAR <= 1'b0; ldMDR <= 1'b0;
-
+  ldMAR <= 1'b0; ldMDR <= 1'b0; 
+  ldSavedUSP <= 1'b0; ldSavedSSP <= 1'b0;
+  ldPriority <= 1'b0; ldVector <= 1'b0;
+  ldCC <= 1'b0; ldPriv <= 1'b0;
+   
   //MUX Select Signal
   selPC <= 2'b00; selMAR <= 1'b0;
   selEAB1 <= 1'b0; selEAB2 <= 2'b00;
-  selMDR <= 1'b0; 
+  selMDR <= 1'b0; selVectorMUX <= 2'b00;
+  selSPMUX <=2'b00; selPSRMUX <= 1'b0;
+  selVectorMUX <= 2'b00; SetPriv <= 2'b00; 
 
   //Write Enable Signals 
   flagWE <= 1'b0; 
@@ -109,46 +111,53 @@ always @ (CurrentState or IR or
 
   case (CurrentState)
     FETCH0: begin
-      NextState <= FETCH1;
-      //Load PC ADDRESS
-      enaPC <= 1'b1; ldMAR <= 1'b1; 
-    end
+      //MAR<-PC
+      enaPC <= 1'b1; ldMAR <= 1'b1;
+      //PC + 1
+      selPC <=2'b00;
+      ldPC<=1'b1;
+      //Check for an Interrupt
+      if(!INT)
+	NextState <= FETCH1;
+      else
+	NextState <= INT0; 
+     end
+    
     FETCH1: begin
-      NextState <= FETCH2;
-      //READ Instruction From Memory
-      selMDR<=1'b1; ldMDR<=1'b1;
-      //Incremente Program Counter
-      selPC<=2'b00;
-      ldPC<=1'b1;  
+      if(memRDY) begin
+        //MDR <- MEM[MAR]
+        selMDR<=1'b1; ldMDR<=1'b1;
+	NextState <= FETCH2;
+      end      
     end
+    
     FETCH2: begin
       NextState <= DECODE;
       //Load Instruction Register
       enaMDR <= 1'b1; ldIR <= 1'b1;       
     end
+    
     DECODE: begin 
       case (IR[15:12])  //AND, ADD, NOT, JSR, BR, LD, ST, JMP.
-        BR:  NextState <= BRANCH0;//**//
+        BR:  NextState <= BR0;//**//
         ADD: NextState <= ADD0;   //**//
         LD:  NextState <= LD0;  //**// 
-        ST:  NextState <= STORE0; //**//
+        ST:  NextState <= ST0; //**//
         JSR: NextState <= JSR0;   //**//
-	JSRR: NextState <= JSRR0; //**//
-	RET: NextState <= RET0;   //**//
         AND: NextState <= AND0;   //**//
         LDR: NextState <= LDR0; //**//
-        STR: NextState <= STORE0; //**//
+        STR: NextState <= STR0; //**//
         RTI: NextState <= RTI0;  //**//
         NOT: NextState <= NOT0;   //**//
-        LDI: NextState <= LD0;    //**//
-        STI: NextState <= STORE1; //**// 
+        LDI: NextState <= LDI0;    //**//
+        STI: NextState <= STI0; //**// 
         JMP: NextState <= JMP0;   //**//
         RES: NextState <=  FETCH0; 
         LEA:  NextState <= LEA0;  //**//
-        TRAP: NextState <= TRAP0; 
+        TRAP: NextState <= TRAP0; //**//
        endcase
     end 
-    BRANCH0:  begin
+    BR0:  begin
      //Select ADDER inputs
      selEAB1 <= 1'b0; 
      selEAB2 <= 2'b10;
@@ -157,80 +166,157 @@ always @ (CurrentState or IR or
      selPC <= 2'b01;
      NextState <= FETCH0;
     end
-    RET0: begin
-       SR1 <= 3'b111;
-       selEAB1 <= 1'b1;
-       selEAB2 <= 2'b00;
-       selPC <= 1'b1;
-       ldPC <= 1'b1;
-       NextState <= FETCH0;       
-    end
-    
+        
     RTI0: begin
-      //Load the PC with the Stack Pointer
+      //MAR <- SP
       SR1 <= 3'b110;
       aluControl <= 2'b00;
       enaALU <= 1'b1;
       ldMAR <= 1'b1;
-      NextState <= RTI1;
+      if(PRIV)
+	NextState <= RTI1;
+      else
+	NextState <= RTI2;
     end 
     
     RTI1: begin
-       selMDR <= 1'b1;
+       //RTI Priviledge Exception
+       //Vector<-x00
+       selVectorMUX <= 2'b01;
+       ldVector <= 1'b1;
+       //MDR<-PSR
+       selMDR <= 1'b0;
        ldMDR <= 1'b1;
-       NextState <= RTI2;
+       enaPSR <= 1'b1;
+       //PSR[15]<-0
+       SetPriv <= 1'b0;
+       ldPriv <= 1'b1;
+       //Finish With Interrupt 
+       NextState <= INT1;
     end
     
     RTI2: begin
+       //MDR<-mem[MAR]
+       selMDR <= 1'b1;
+       if(memRDY) begin
+	 ldMDR <= 1'b1;
+	 NextState <= RTI3;
+       end      
+    end
+
+    RTI3: begin
+       //PC<-MDR
        enaMDR <= 1'b1;
        selPC <= 2'b10;
        ldPC <= 1'b1;
-       NextState <= FETCH0;   
+       NextState <= RTI4;
     end
 
-    TRAP0: begin
-       //Save the Current PC To R7
-       enaPC <= 1'b1;
-       DR <= 3'b111;
+    RTI4: begin
+       //MAR,SP<-SP+1
+       selSPMUX <= 2'b10;
+       enaSP <= 1'b1;
+       ldMAR <= 1'b1;
+       DR <= 3'b110;
        regWE <= 1'b1;
+       NextState <= RTI5;
+    end
+
+    RTI5: begin
+       //MDR<-Mem[MAR]
+       selMDR <= 1'b1;
+       if(memRDY) begin
+	 ldMDR <= 1'b1;
+	 NextState <= RTI3;
+       end     
+    end
+    
+    RTI6: begin
+       //PSR <-MDR
+       enaMDR <= 1'b1;
+       selPSRMUX <= 1'b0;
+       ldPriv <= 1'b1;
+       ldCC <= 1'b1;
+       ldPriority <= 1'b1;
+       NextState <= RTI7;
+    end
+    
+    RTI7: begin
+       selSPMUX <= 2'b10;
+       enaSP <= 1'b1;
+       DR <= 3'b110;
+       regWE <= 1'b1;
+       if(PRIV)
+	 NextState <= RTI8;
+       else
+	 NextState <= RTI9;
+    end
+
+    RTI8: begin
+       //SavedSSP <- SP
+       ldSavedSSP <= 1'b1;
+       SR1 <= 3'b110;
+       //SP<-SavedUSP
+       DR <= 3'b110;
+       regWE <= 1'b1;
+       selSPMUX <= 2'b11;
+       NextState <= FETCH0;
+    end
+
+    RTI9: begin
+       NextState <= FETCH0;
+    end
+
+    RES0: begin
+        //RTI Priviledge Exception
+       //Vector<-x00
+       selVectorMUX <= 2'b01;
+       ldVector <= 1'b1;
+       //MDR<-PSR
+       selMDR <= 1'b0;
+       ldMDR <= 1'b1;
+       enaPSR <= 1'b1;
+       //PSR[15]<-0
+       SetPriv <= 1'b0;
+       ldPriv <= 1'b1;
+       //Finish With Interrupt
+       if(PRIV)  
+	 NextState <= INT1;
+       else
+	 NextState <= INT2;
+    end
+    
+    TRAP0: begin
+       //MAR<-ZEXT(TRAPVECTOR8)
+       selMAR <= 1'b1;
+       enaMARM <= 1'b1;
+       ldMAR <= 1'b1;
        NextState <= TRAP1;
     end
-
+      
     TRAP1: begin
-      //Write the Trap Vector the MAR
-      selMAR <= 1'b1;
-      enaMARM <= 1'b1;
-      ldMAR <= 1'b1;
-      NextState <= TRAP2;
+       if(memRDY) begin
+	//R7 <- PC
+        enaPC = 1'b1;
+        DR = 3'b111;
+        regWE = 1'b1;
+	//MDR <- MEM[MAR]
+	selMDR <= 1'b1;
+	ldMDR <= 1'b1;
+	NextState <= TRAP2;
+       end  
     end
     
     TRAP2: begin
-      //Load the MDR
-      selMDR<= 1'b1;
-      ldMAR <= 1'b1;
-      NextState <= TRAP3;
-    end
-
-    TRAP3: begin
-      //Load the PC
+      //PC <- MDR
       enaMDR <= 1'b1;
       selPC <= 2'b10;
       ldPC <= 1'b1;
       NextState <= FETCH0;
     end
-    
-    STR1: begin
-     selEAB1 <= 1'b1;
-     selEAB2 <= 2'b01;
-     selMAR <= 1'b0;
-     enaMARM <= 1'b1;
-     ldMAR <= 1'b1;
-     
-     NextState <= STORE2;
-       
-    end
+        
     LD0: begin
-     //Load MAR
+     // MAR <- PC + offset9
      selEAB2 <= 2'b10; 
      selEAB1 <= 1'b0; 
      selMAR <= 1'b0; 
@@ -238,40 +324,58 @@ always @ (CurrentState or IR or
      ldMAR <= 1'b1;
      NextState <= LD1;
     end
+
+    LDI0: begin
+       //MAR <-PC+off9
+       selEAB1 <= 1'b0;
+       selEAB2 <= 2'b10;
+       selMAR <= 1'b0;
+       enaMARM <= 1'b1;
+       ldMAR <= 1'b1;
+       NextState <= LDI1;
+    end
+    
+    LDI1: begin
+       //MDR<-Mem[MAR]
+       if(memRDY) begin
+	  selMDR <= 1'b1;
+	  ldMDR <= 1'b1;
+	  NextState <= LDI2;	  
+       end
+    end
+    
+    LDI2: begin
+       //MDR<-MAR
+       enaMDR <= 1'b1;
+       ldMAR <= 1'b1;
+       NextState <= LD1;
+    end
+    
     LD1: begin
-     //Load MDR
-     selMDR <= 1'b1; 
-     ldMDR <= 1'b1;
-     if( IR[15:12] == LDI )
-       NextState <= LDI2;
-     else
-       NextState <= LD2;
-    end   
+     //MDR<-M[MAR]
+     if(memRDY) begin
+	selMDR <= 1'b1; 
+	ldMDR <= 1'b1;
+        NextState <= LD2;
+     end
+    end
+   
     LD2: begin
-     //Write to Register File 
+     //DR <- MDR 
      DR <= IR[11:9]; 
      regWE <= 1'b1; 
-     enaMDR <= 1'b1; 
+     enaMDR <= 1'b1;
+     ldCC<=1'b1;  
      NextState <= FETCH0;
     end
-    LDI2: begin
-       ldMAR <= 1'b1;
-       enaMDR <= 1'b1;
-       NextState <= LDI3;
-    end
-    LDI3: begin
-       selMDR <= 1'b1;
-       ldMDR <= 1'b1;
-       NextState <= LD2;
-    end
+        
     LDR0: begin
+       //MAR<-SR1+ offset6
        selEAB1 <= 1'b1;
        selEAB2 <= 2'b01;
        selMAR <= 1'b0;
        enaMARM <= 1'b1;
        ldMAR <= 1'b1;
-       //The remaining is the same as the
-       // the load insturctions
        NextState <= LD1;
     end   
     LEA0: begin
@@ -281,6 +385,7 @@ always @ (CurrentState or IR or
        enaMARM <= 1'b1;
        DR <= IR[11:9];
        regWE <= 1'b1;
+       ldCC <= 1'b1;
        NextState <= FETCH0;
     end
     
@@ -289,7 +394,8 @@ always @ (CurrentState or IR or
      enaALU <= 1'b1;
      SR1 <= IR[8:6]; 
      DR <= IR[11:9]; 
-     regWE <= 1'b1;  
+     regWE <= 1'b1;
+     ldCC <= 1'b1;  
      NextState <= FETCH0;
     end 
     ADD0: begin 
@@ -299,7 +405,8 @@ always @ (CurrentState or IR or
      SR2 <= IR[2:0];  
      DR <= IR[11:9]; 
      regWE <= 1'b1;  
-     flagWE <= 1'b1; 
+     flagWE <= 1'b1;
+     ldCC <= 1'b1;    
      NextState <= FETCH0;
     end
     AND0: begin 
@@ -308,75 +415,105 @@ always @ (CurrentState or IR or
      SR1 <= IR[8:6];
      SR2 <= IR[2:0];  
      DR <= IR[11:9]; 
-     regWE <= 1'b1;  
+     regWE <= 1'b1;
+     ldCC <= 1'b1;
      NextState <= FETCH0;
     end
-    JSRR0: begin
-       //Store the PC
-       enaPC <= 1'b1;
-       DR <= 3'b111;
-       regWE <= 1'b1;
-       //Load PC From Register
-       SR1 <= IR[8:6];
-       selEAB1 <= 1'b1;
-       selEAB2 <= 2'b00;
-       selPC <= 2'b01;
-       ldPC <= 1'b1;
-       NextState <= FETCH0;
+   
+    STI0: begin
+        //MAR <-PC+off9
+       selEAB1 <= 1'b0;
+       selEAB2 <= 2'b10;
+       selMAR <= 1'b0;
+       enaMARM <= 1'b1;
+       ldMAR <= 1'b1;
+       NextState <= STI1;
     end
-    STORE0: begin
-     //Load the MDR 
-     SR1 <= IR[11:9];
-     aluControl <= 2'b00;
-     enaALU <= 1'b1;
-     selMDR <= 1'b0; 
-     ldMDR <= 1'b1;
-     if( IR[15:12] == STR )
-       NextState <= STR1;
-     else if ( IR[15:12] == STI )
-       NextState <= STORE2;
-     else
-       NextState <= STORE1;
-    end  
-    STORE1: begin
-     //Load the MAR 
+
+    STI1: begin
+       //MDR<-Mem[MAR]
+       if(memRDY) begin
+	  selMDR <= 1'b1;
+	  ldMDR <= 1'b1;
+	  NextState <= STI2;	  
+       end
+    end
+
+    STI2: begin
+      //MDR<-MAR
+      enaMDR <= 1'b1;
+      ldMAR <= 1'b1;
+      NextState <= LD1;
+    end
+
+    STR0: begin
+      //MAR<-SR1+ offset6
+      selEAB1 <= 1'b1;
+      selEAB2 <= 2'b01;
+      selMAR <= 1'b0;
+      enaMARM <= 1'b1;
+      ldMAR <= 1'b1;
+      NextState <= ST1;
+    end
+    
+    ST0: begin
+     //MAR <- PC + SEXT(offset9) 
      selEAB1 <= 1'b0; 
      selEAB2 <= 2'b10; 
      selMAR <= 1'b0; 
      enaMARM <= 1'b1; 
      ldMAR <= 1'b1;
-     if( IR[15:12] == STR )
-       NextState <= STI2;
-     else
-       NextState <= STORE2;
-    end  
-    STORE2: begin 
-     memWE <= 1'b1; 
-     NextState <= FETCH0;
+     NextState <= ST1;  
     end
-    STI2: begin
-       selMDR <= 1'b1;
-       ldMDR <= 1'b1;
-       NextState <= STI3;
+    
+    ST1: begin
+     //MDR<-SR
+     SR1 <= IR[11:9];
+     aluControl <= 2'b00;
+     enaALU <= 1'b1;
+     selMDR <= 1'b0; 
+     ldMDR <= 1'b1;
+     NextState <= ST2;  
     end
-    STI3: begin
-       enaMDR <= 1'b1;
-       ldMAR <= 1'b1;
-       NextState <= STORE0;
-    end   
-    JSR0: begin 
+
+    ST2: begin
+     //Mem[MAR] <- MDR
+     if(memRDY) begin
+       memWE <= 1'b1; 
+       NextState <= FETCH0;
+     end
+    end
+        
+   JSR0: begin
+     //R7 <- PC
      DR <= 3'b111; 
      enaPC <= 1'b1; 
-     regWE <= 1'b1; 
-     NextState <= JSR1;
+     regWE <= 1'b1;
+     //Finish JSR or JSRR
+     if(IR[11])
+       NextState <= JSR1;
+     else
+       NextState <= JSR2;      
    end  
-   JSR1: begin 
+   JSR1: begin
+     //PC <- PC + offset11
      selEAB1 <= 1'b0; 
      selEAB2 <= 2'b11; 
      selPC <= 2'b01; 
      ldPC <= 1'b1; 
      NextState <= FETCH0;
-   end  
+   end
+ 
+   JSR2: begin
+     //JSRR Instruction
+     //PC <- SR1
+     SR1 <= IR[8:6];
+     selEAB1 <= 1'b1; 
+     selEAB2 <= 2'b00; 
+     selPC <= 2'b01; 
+     ldPC <= 1'b1; 
+     NextState <= FETCH0;
+   end
    JMP0: begin 
      SR1 <= IR[8:6]; 
      selEAB1 <= 1'b1; 
@@ -385,6 +522,104 @@ always @ (CurrentState or IR or
      ldPC <= 1'b1; 
      NextState <= FETCH0; 
    end
+    
+   INT0: begin
+     //Vector <- INTV
+     selVectorMUX <= 2'b00;
+     ldVector <= 1'b1;
+     //MDR <- PSR
+     enaPSR <= 1'b1;
+     selMDR <= 1'b0;
+     ldMDR <= 1'b1;
+     //PSR[10:8] <- Interrupt Priority
+     selPSRMUX <= 1'b1;
+     ldPriority <= 1'b1;
+     //PSR[15] <- 0
+     SetPriv <= 1'b0;
+
+     if(PRIV)
+       NextState <= INT1;
+     else
+       NextState <= INT2;      
+   end // case: INT0
+    
+   INT1: begin
+     //SavedUSP <- SP
+     SR1 <= 3'b110;
+     ldSavedUSP <= 1'b1;
+     //SP <- Saved_SSP
+     DR <= 3'b110;
+     selSPMUX <= 2'b11;
+     enaSP <= 1'b1;
+     regWE <= 1'b1;
+     NextState <= INT2; 
+   end
+
+   INT2: begin
+     //MAR,SP<=SP-1
+     SR1 <= 3'b110;
+     DR <= 1'b1;
+     selSPMUX <= 2'b01;
+     enaSP <= 1'b1;
+     regWE <= 1'b1;
+     ldMAR <= 1'b1;
+     NextState <= INT3;
+   end
+
+   INT3: begin
+     if(memRDY) begin
+	memWE <= 1'b1;
+	NextState <= INT4;
+     end
+   end
+
+   INT4: begin
+     enaPCM1 <= 1'b1;
+     ldMDR <= 1'b1;
+     selMDR <= 1'b1;
+     NextState <= INT5;
+   end
+        
+   INT5: begin
+     //MAR,SP<=SP-1
+     SR1 <= 3'b110;
+     DR <= 1'b1;
+     selSPMUX <= 2'b01;
+     enaSP <= 1'b1;
+     regWE <= 1'b1;
+     ldMAR <= 1'b1;
+     NextState <= INT3;
+   end
+
+   INT6: begin
+     if(memRDY) begin
+       memWE <= 1'b1;
+       NextState <= INT4;
+     end
+   end
+
+   INT7: begin
+     enaVector <= 1'b1;
+     ldMAR <= 1'b1;
+     NextState <= INT8; 
+   end
+
+   INT8: begin
+     //MDR <- mem[MAR]
+     if(memRDY) begin
+       selMDR <= 1'b1;
+       ldMDR <= 1'b1;
+       NextState <= INT9;
+     end
+   end
+
+   INT9: begin
+      enaMDR <= 1'b1;
+      selPC <= 2'b10;
+      ldPC <= 1'b1;
+      NextState<= FETCH0;
+   end
+        
   endcase
 end  
 

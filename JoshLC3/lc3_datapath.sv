@@ -6,10 +6,12 @@ module lc3_datapath ( clk, rst,
 		     selEAB1, selEAB2, enaPC, ldPC, ldIR,
 	             ldMAR, ldMDR, selMDR, flagWE, enaMDR,
 		     enaPSR, enaPCM1, enaSP, enaVector,
-		     ldSavedUSP, ldSavedSSP, ldPriority, ldVector, ldCC,
-		     selSPMUX, selPSRMUX, selVectorMUX,
-		     interruptPriority, INTV,
-                     memory_din, memory_dout, memory_addr); 
+		     ldSavedUSP, ldSavedSSP, ldPriority, ldVector, ldCC, ldPriv,
+		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
+		     IRQ, INTP, INTV, INT,
+		     KBDR, KBSRi, KBSRo, DDR, DSRi, DSRo,
+                     ldKBSR, ldDDR, ldDSR, 
+                     memory_din, memory_dout, memory_addr, memEN, memWE); 
 input logic clk;
 input logic rst;
 
@@ -39,10 +41,47 @@ output logic [15:0] IR_OUT;
 output logic N_OUT;
 output logic Z_OUT;
 output logic P_OUT;
-
+output logic PRIV;
+   
 output logic [15:0] memory_din;
 output logic [15:0] memory_addr; 
+output logic memEN;
+input logic memWE;
+   
+   
+input logic 	    enaPSR;
+input logic 	    enaPCM1;
+input logic 	    enaSP;
+input logic 	    enaVector;
+   
+input logic         ldSavedUSP;
+input logic 	    ldSavedSSP;
+input logic 	    ldPriority;
+input logic 	    ldVector;
+input logic 	    ldCC;
+input logic 	    ldPriv;
+    
+input logic [1:0]   selSPMUX;
+input logic 	    selPSRMUX;
+input logic [1:0]   selVectorMUX;
+input logic 	    SetPriv;
 
+
+input logic [15:0] KBDR;
+input logic [15:0] KBSRi;
+output logic [15:0] KBSRo;   
+output logic [15:0] DDR;
+input logic [15:0] DSRi;
+input logic [15:0] DSRo;    
+output logic    ldKBSR;
+output logic    ldDDR;
+output logic    ldDSR;
+
+input logic 	    IRQ; //Interrupt Request
+input logic [2:0]   INTP; //Interrupt Priority
+input logic [7:0]   INTV; //Interrupt Vector
+output logic        INT; //Inform Control of Interrupt
+    
 //Datapath Registers 
 logic [15:0] PC;
 logic [15:0] IR;
@@ -51,7 +90,8 @@ logic [15:0] MDR;
 logic [15:0] PSR;
 logic [15:0] SavedUSP;
 logic [15:0] SavedSSP;
-logic [2:0] NZP;   
+logic [2:0] NZP; 
+logic [2:0] INTP_reg;
 
 logic N, Z, P;
 logic [15:0] REGFILE [0:7];
@@ -69,6 +109,12 @@ logic [15:0] ADDR2MUX;
 logic [15:0] SR2MUX;
 logic [15:0] PSRMUX;
 logic [15:0] SPMUX;
+logic [15:0] VectorMUX;
+logic [15:0] INMUX;
+logic [1:0] selINMUX;
+   
+logic [15:0] PC_MINUS_1;
+
   
    
 //Arithmetic Units
@@ -128,8 +174,18 @@ always_ff @ (posedge clk iff rst == 0 or posedge rst) begin
    end
 end
 
-assign INT <= InterruptPriority > PSR[10:8];
-assign PRIV <= PSR[15];
+
+always_ff @ (posedge clk iff rst == 0 or posedge rst) begin
+   if(rst == 1'b1) begin
+      INTP_reg <= 3'b0;
+   end else begin
+      if(IRQ)
+	INTP_reg <= INTP;
+   end
+end
+   
+assign INT = (INTP_reg > PSR[10:8]); 
+assign PRIV = PSR[15];
    
 /************************************
  Program Status Register MUX
@@ -137,9 +193,9 @@ assign PRIV <= PSR[15];
 
 always_comb begin
    if(selPSRMUX == 1'b1)
-     PSRMUX = { SetPriv, {4{1'b0}}, InterruptPriority, {5{1'b0}}, NZP};
+     PSRMUX = { SetPriv, {4{1'b0}}, INTP, {5{1'b0}}, NZP};
    else
-     PSRMUX = { BUSS[15],  {4{1'b0}}, BUSS[10:8], {5{1'b0}}, BUSS[2:0]);
+     PSRMUX = { BUSS[15],  {4{1'b0}}, BUSS[10:8], {5{1'b0}}, BUSS[2:0]};
 end
   
 /************************************
@@ -173,7 +229,8 @@ always_ff @ (posedge clk iff rst==0 or posedge rst) begin
       if(ldSavedSSP)
 	SavedSSP <= SR1;   
    end
-
+end
+   
 always_comb begin
    unique case (selSPMUX)
      2'b00: SPMUX = SavedSSP;
@@ -190,8 +247,9 @@ end
    always_comb begin
      unique case (selVectorMUX)
        2'b00: VectorMUX = { 8'h01,INTV};
-       2'b01: VectorMUX = 8'h0100;
-       2'b10: VectorMUX = 8'h0101;
+       2'b01: VectorMUX = 16'h0100;
+       2'b10: VectorMUX = 16'h0101;
+       default: $display("Vector ERROR: Illegal Select Signal ");
      endcase // unique case (selVectorMUX)
   end
    
@@ -279,10 +337,56 @@ end
 assign SR2MUX = (IR[5]) ? SEXT4 : RB; 
 
 /************************************
+ Address Control Logic
+************************************/
+
+always_comb begin
+  memEN = selMDR;
+  selINMUX = 2'b11; //Default to MEM
+  ldKBSR = 1'b0;
+  ldDSR = 1'b0;
+  ldDDR = 1'b0;
+   
+  if(MAR == 16'hFE00 && selMDR == 1'b1 && memWE == 1'b0) begin
+     memEN = 0;
+     selINMUX = 2'b01; //Select KBSR
+  end
+  if(MAR == 16'hFE00 && selMDR == 1'b1 && memWE == 1'b1) begin
+    memEN = 0;
+    ldKBSR = 1'b1;
+  end  
+  if(MAR == 16'hFE02 && selMDR == 1'b1 && memWE == 1'b0) begin
+     memEN = 0;
+     selINMUX = 2'b00; //Select KBDR
+  end   
+  if(MAR == 16'hFE04 && selMDR == 1'b1 && memWE == 1'b0) begin
+     memEN = 0;
+     selINMUX = 2'b10; //Select DSR
+  end
+   if(MAR == 16'hFE06 && selMDR == 1'b1 && memWE == 1'b1) begin
+    memEN = 0;
+    ldDDR = 1'b1;
+  end    
+end
+   
+/************************************
+ INMUX
+************************************/
+  
+always_comb begin
+   case (selINMUX)
+     2'b00: INMUX = KBDR;
+     2'b01: INMUX = KBSRi;
+     2'b10: INMUX = DSRi;
+     2'b11: INMUX = memOut;
+   endcase // case (selINMUX)
+end    
+   
+/************************************
  MDRMUX 
 ************************************/
 
-assign MDRMUX = (selMDR) ? memOut : BUSS; 
+assign MDRMUX = (selMDR) ? INMUX : BUSS; 
 
 /************************************
  PC Minus 1 
@@ -346,8 +450,8 @@ assign BUSS = (enaALU) ? ALU : 16'hZZZZ;
 assign BUSS = (enaMDR) ? MDR : 16'hZZZZ;
 assign BUSS = (enaPSR) ? PSR : 16'hZZZZ;
 assign BUSS = (enaPCM1) ? PC_MINUS_1 : 16'hZZZZ;
-assign BUSS = (enaSP) ? : 16'hZZZZ;
-assign BUSS = (enaVector) ? : 16'hZZZZ;
+assign BUSS = (enaSP) ? SPMUX : 16'hZZZZ;
+assign BUSS = (enaVector) ? VectorMUX : 16'hZZZZ;
   
 
 endmodule
