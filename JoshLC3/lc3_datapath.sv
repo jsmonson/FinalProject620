@@ -9,8 +9,7 @@ module lc3_datapath ( clk, rst,
 		     ldSavedUSP, ldSavedSSP, ldPriority, ldVector, ldCC, ldPriv,
 		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
 		     IRQ, INTP, INTV, INT,
-		     KBDR, KBSRi, KBSRo, DDR, DSRi, DSRo,
-                     ldKBSR, ldDDR, ldDSR, 
+		     MemoryMappedIO_in, MemoryMappedIO_out, MemoryMappedIO_load, 
                      memory_din, memory_dout, memory_addr, memEN, memWE); 
 input logic clk;
 input logic rst;
@@ -35,6 +34,10 @@ input logic selMDR;
 input logic flagWE;
 input logic enaMDR;
 
+input logic  [15:0] MemoryMappedIO_in;
+output logic [15:0] MemoryMappedIO_out;
+output logic        MemoryMapped_load;
+   
 input logic [15:0] memory_dout;
 
 output logic [15:0] IR_OUT; 
@@ -115,7 +118,6 @@ logic [1:0] selINMUX;
    
 logic [15:0] PC_MINUS_1;
 
-  
    
 //Arithmetic Units
 logic [15:0] ADDER;
@@ -340,33 +342,25 @@ assign SR2MUX = (IR[5]) ? SEXT4 : RB;
  Address Control Logic
 ************************************/
 
-always_comb begin
-  memEN = selMDR;
-  selINMUX = 2'b11; //Default to MEM
-  ldKBSR = 1'b0;
-  ldDSR = 1'b0;
-  ldDDR = 1'b0;
+assign MemoryMappedIO_out = MDR;
    
-  if(MAR == 16'hFE00 && selMDR == 1'b1 && memWE == 1'b0) begin
+always_comb begin
+  //Default is Memory Read
+  memEN = 1'b1;
+  selINMUX = 1'b0; 
+  MemoryMappedIO_load = 1'b0;
+   
+  //MemoryMappedIO Logic
+  if(MAP >= 16'hFE00 && selMDR == 1'b1) begin
+     //MemoryMappedIO Read
      memEN = 0;
-     selINMUX = 2'b01; //Select KBSR
-  end
-  if(MAR == 16'hFE00 && selMDR == 1'b1 && memWE == 1'b1) begin
-    memEN = 0;
-    ldKBSR = 1'b1;
-  end  
-  if(MAR == 16'hFE02 && selMDR == 1'b1 && memWE == 1'b0) begin
-     memEN = 0;
-     selINMUX = 2'b00; //Select KBDR
-  end   
-  if(MAR == 16'hFE04 && selMDR == 1'b1 && memWE == 1'b0) begin
-     memEN = 0;
-     selINMUX = 2'b10; //Select DSR
-  end
-   if(MAR == 16'hFE06 && selMDR == 1'b1 && memWE == 1'b1) begin
-    memEN = 0;
-    ldDDR = 1'b1;
-  end    
+     selINMUX = 1'b1;    
+     if(memWR == 1'b1) begin
+       //MemoryMappedIO Write
+       MemoryMappedIO_load = 1'b1;
+     end
+  end     
+  
 end
    
 /************************************
@@ -375,10 +369,8 @@ end
   
 always_comb begin
    case (selINMUX)
-     2'b00: INMUX = KBDR;
-     2'b01: INMUX = KBSRi;
-     2'b10: INMUX = DSRi;
-     2'b11: INMUX = memOut;
+     1'b0: INMUX = memOut;
+     1'b1: INMUX = MemoryMappedIO_in;
    endcase // case (selINMUX)
 end    
    
