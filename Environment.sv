@@ -4,7 +4,7 @@
     Driver drv;
     mailbox #(MemoryTransaction) gen2agt, agt2drv, agt2scb;
     int count;
-    event gen2agths, agt2drvhs, agt2scbhs, chk2gen;
+    event agt2scbhs, chk2gen;
     function new(int count);
        this.count = count;
     endfunction;
@@ -12,9 +12,9 @@
       gen2agt = new(1);
       agt2drv = new(1);
 	  agt2scb = new(1);
-      gen = new(gen2agt,gen2agths, chk2gen,mem_access_cnt);
-      agt = new(gen2agt,agt2drv, agt2scb, gen2agths,agt2drvhs,agt2scbhs);
-      drv = new(agt2drv,agt2drvhs);
+      gen = new(gen2agt, chk2gen);
+      agt = new(gen2agt,agt2drv, agt2scb,agt2scbhs);
+      drv = new(agt2drv);
     endfunction
   
     task run();
