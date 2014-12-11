@@ -1,10 +1,8 @@
 class Driver;
       mailbox #(MemoryTransaction) agt2drv;
       MemoryTransaction tr;
-      event agt2drvhs; // mailbox synchronization
-      function new(input mailbox #(MemoryTransaction) agt2drv, input event agt2drvhs);
+      function new(input mailbox #(MemoryTransaction) agt2drv);
         this.agt2drv = agt2drv;
-        this.agt2drvhs = agt2drvhs;
 	  endfunction
       task run(input int count);
 		repeat(count) begin
@@ -20,9 +18,6 @@ class Driver;
 				$root.top.INTP <= tr.INTP;
 				while (!$root.top.LC3.ldMAR) begin
 					@$root.top.lc3_if.cb;
-				//repeat()@$root.top.lc3_if.cb begin					
-						// drive all inputs			
-						// pulse R
 				end
 				repeat(mem_tran_num)@$root.top.lc3_if.cb;
 				$root.top.lc3_if.memory_dout <= tr.DataOut;
@@ -32,7 +27,6 @@ class Driver;
 				@$root.top.lc3_if.cb;
 				memRDY <= 0;
 			end
-			
 		end 
     endtask
   endclass
