@@ -26,7 +26,10 @@ class Scoreboard;
    bit 	      reset;
 
    MemoryTransaction CurT;
-      
+   
+   //End Of Instruction Cycle Transaction
+   MemoryTransaction EOIC;
+   
    mailbox #(MemoryTransaction) Agt2SB;
    mailbox #(MemoryTransaction) SB2Chk;
       
@@ -38,7 +41,10 @@ class Scoreboard;
    Ext #(11) Ext11;
     
    function new (mailbox #(MemoryTransaction) Agt2SBi, SB2Chki);
-      
+
+      EOIC = new ();
+      EOIC.EndOfInstructionCycle = 1'b1;
+            
       Agt2SB = Agt2SBi;
       SB2Chk = SB2Chki;
       
@@ -162,6 +168,10 @@ class Scoreboard;
     
      if(reset)
        reset_sb();
+
+     //Send End Of Instruction Cycle Transaction
+     //This tell the Checker to Compare SB and DUT State
+     SB2Chk.put(EOIC);
 	
    endfunction // Update
 
@@ -287,12 +297,17 @@ class Scoreboard;
 	 PSR = TEMP;
       end else
 	 PriveledgeModeException();
-      
-	 //Initiate the Priviledge Mode Exception
+      	 
    endfunction // LC3_RTI
 
+   function automatic void SetSupervisorMode();
+      PSR[15] = 1'b0;
+   endfunction // SetSupervisorMode
 
-
+   function automatic void SetUserMode();
+      PSR[15] = 1'b1;
+   endfunction // SetUserMode
+      
    function automatic void SaveUSPLoadSSP();
       //Save the User Stack Pointer
       SavedUSP = RegFile[6];
@@ -315,32 +330,32 @@ class Scoreboard;
    end // if (INT)
       
    function automatic void Interrupt();
+      
       if(PSR[15] == 1'b1) begin
-	 //LC3 in User Mode
-	 //Switch to Supervisor Mode
-	 PSR[15] = 1'b0;
-	 //Save the User Stack Pointer
-	 SavedUSP = RegFile[6];
-	 //Load the Supervisor Stack Pointer
-	 RegFile[6] = SavedSSP;
+	 SaveUSPLoadSSP();
       end
-      //Decrement SSP
-      RegFile[6] = RegFile[6] - 1;
-      //Put the PSR on the Supervisor Stack
-      WriteTransaction(RegFile[6], PSR);
-      //Decrement SSP
-      RegFile[6] = RegFile[6] - 1;
-      //Put the PC on the Supervisor Stack
-      WriteTransaction(RegFile[6], PC-1);
-            
+
+      SavePSRAndPCLoadVector(INTV);
+
+      //Update PSR Priority
       PSR[10:8] = INTP;
-     
+      
+      SetSupervisorMode();
+                 
    endfunction // Interrupt
 	 
    function automatic void PriveledgeModeException();
+      SaveUSPLoadSS();
+      SavePSRAndPCLoadVector(16'h0100);
+      SetSupervisorMode();      
    endfunction // PriveledgeModeException
 
    function automatic void InvalidInstructionException();
+      if(PSR[15] == 1'b1) begin
+	 SaveUSPLoadSSP();
+      end
+      SavePSRAndPCLoadVector(16'h0101);
+      SetSupervisorMode();
    endfunction // InvalidInstructionException
      
    
