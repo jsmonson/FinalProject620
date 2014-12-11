@@ -7,13 +7,15 @@
         this.gen2agths = gen2agths;
 		this.chk2gen =chk2gen;
     endfunction
+	int tr_num;
+	Opcode op;
     task run(input int count);
         repeat(count) begin
             tr = new();
             `SV_RAND_CHECK(tr.randomize());
 			tr.isInstr = 1'b1;
             gen2agt.put(tr);
-			int tr_num =  mem_access_cnt[Opcodes'(tr.DataOut[15:12])];
+			tr_num =  mem_access_cnt[$cast(cp,tr.DataOut[15:12])];
 			repeat(tr_num) begin
 				
 			end

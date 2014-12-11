@@ -19,7 +19,7 @@ class MemoryTransaction;
    rand bit IRQ;
    rand bit [7:0] INTV;
    rand bit [2:0] INTP;
-      
+   rand int reset_cycles;   
    //Memory Mapped I/O Signals
    rand bit [15:0] MemoryMappedIO_in;
    bit 	      MemoryMappedIO_out;
@@ -31,7 +31,7 @@ class MemoryTransaction;
    //Change these later... if necessary
    constraint c_mcr { MCR==0; };
    constraint c_rst { rst==0; };
-      
+     constraint r_cyc { reset_cycles == 1; }; 
    //Instruction Helper Functions   
    function bit [3:0] Opcode();
       return DataOut[15:12];

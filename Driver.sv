@@ -10,14 +10,29 @@ class Driver;
 		repeat(count) begin
 			agt2drv.get(tr);
 			@$root.top.lc3_if.cb;
-			if (tr.rst)
+			if (tr.rst) begin
 				$root.top.lc3_if.rst <= 1'b1;
-			else begin
-				$root.top.lc3_if.rst <= 1'b0;
-				if ($root.top.LC3.ldMAR)
-					$root.top.lc3_if.memory_dout <= tr.DataOut;
+				(tr.reset_cycles)@$root.top.lc3_if.cb;
 			end
-			->agt2drvhs; // tell agent that transaction has been driven onto DUT
+			else begin
+				$root.top.IRQ <= tr.IRQ;
+				$root.top.INTV <=tr.INTV;
+				$root.top.INTP <= tr.INTP;
+				while (!$root.top.LC3.ldMAR) begin
+					@$root.top.lc3_if.cb;
+				//repeat()@$root.top.lc3_if.cb begin					
+						// drive all inputs			
+						// pulse R
+				end
+				repeat(mem_tran_num)@$root.top.lc3_if.cb;
+				$root.top.lc3_if.memory_dout <= tr.DataOut;
+				$root.top.lc3_if.MemoryMappedIO_in <= tr.MemoryMappedIO_in;
+				$root.top.lc3_if.MCR <= tr.MCR;
+				memRDY <= 1;
+				@$root.top.lc3_if.cb;
+				memRDY <= 0;
+			end
+			
 		end 
     endtask
   endclass
