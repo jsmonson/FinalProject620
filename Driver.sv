@@ -31,9 +31,9 @@ class Driver;
 	endtask
 	task transmit(MemoryTransaction tr);
 		#1;
-		$display("Drv: Sending Transaction...");
+		$display("[%0t] Drv: Sending Transaction...",$time);
 		if (tr.rst) begin
-			$display("Reset!");
+			$display("[%0t] Reset!",$time);
 			lc3if.rst <= 1'b1;
 			repeat(tr.reset_cycles) #1;
 		end
