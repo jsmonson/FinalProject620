@@ -27,7 +27,7 @@ class Driver;
     endtask
 	task init_reset(input int count);
 		lc3if.rst <= 1'b1;
-		repeat(count) #1;
+		repeat(count) ##1;
 	endtask
 	task transmit(MemoryTransaction tr);
 		#1;
@@ -35,21 +35,21 @@ class Driver;
 		if (tr.rst) begin
 			$display("[%0t] Reset!",$time);
 			lc3if.rst <= 1'b1;
-			repeat(tr.reset_cycles) #1;
+			repeat(tr.reset_cycles) ##1;
 		end
 		else begin
 			lc3if.cb.IRQ <= tr.IRQ;
 			lc3if.cb.INTV <=tr.INTV;
 			lc3if.cb.INTP <= tr.INTP;
 			while (!$root.top.LC3.ldMAR) begin
-				#1;
+				##1;
 			end
-			repeat(mem_tran_num) #1;
+			repeat(mem_tran_num) ##1;
 			lc3if.cb.memory_dout <= tr.DataOut;
 			lc3if.cb.MemoryMappedIO_in <= tr.MemoryMappedIO_in;
 			lc3if.cb.MCR <= tr.MCR;
 			lc3if.cb.memRDY <= 1;
-			#1;
+			##1;
 			lc3if.cb.memRDY <= 0;
 		end
 	endtask
