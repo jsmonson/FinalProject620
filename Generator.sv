@@ -10,7 +10,8 @@
         repeat(count) begin
             tr = new();
             `SV_RAND_CHECK(tr.randomize());
-            gen2agt.put(tr);
+	    $display("@%0d:Sending Transaction",$time);
+	    gen2agt.put(tr);
 			wait (chk2gen.triggered);
         end
     endtask
