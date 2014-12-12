@@ -1,6 +1,7 @@
 class Monitor;
    
    vLC3if lc3if;
+   int tCount;
    
    mailbox #(MemoryTransaction) Mon2Chk;
    MemoryTransaction toSend;
@@ -10,33 +11,41 @@ class Monitor;
       lc3if = lc3ifi;
    endfunction // new
 
+   function automatic void SendToChecker(MemoryTransaction T);
+      $display("@%0d: Monitor Sending Transaction to Checker", $time);
+      T.timestamp = $time;
+      tCount--;
+      Mon2Chk.put(T);
+   endfunction // SendToChecker
+      
    task run(int count);
-      forever begin
+      tCount = count;
+       while (tCount > 0) begin
 	 
-	 if($root.top.DUT.rst) begin
+	 if(lc3if.cb.rst) begin
 	    toSend = new ();
-	    toSend.rst = 1'b1;
-	    Mon2Chk.put(toSend);
-	 end else if ($root.top.DUT.memRDY) begin
+	    toSend.rst = 1'b1;	    
+	    SendToChecker(toSend);
+	 end else if (lc3if.cb.memRDY) begin
 	    
 	    toSend = new ();
-	    toSend.Address = $root.top.DUT.Address;
-            //toSend.DataOut =  $root.top.DUT.;
-            //toSend.DataIn =  $root.top.DUT.;
-	    //toSend.we =  $root.top.DUT.;
-            //toSend.en = $root.top.DUT. ; 
-	    //toSend.rst = 1'b0;
+	    toSend.Address = lc3if.cb.memory_addr;
+            toSend.DataOut = lc3if.cb.memory_dout;
+	    toSend.DataIn =  lc3if.cb.memory_din;
+	    toSend.we =  lc3if.cb.memWE;
+            toSend.en =  lc3if.cb.memEN; 
+	    toSend.rst = 1'b0;
 	    
-	    //toSend.IRQ  =  $root.top.DUT.;
-	    //toSend.INTV =  $root.top.DUT.;
-	    //toSend.INTP =  $root.top.DUT.;
+	    toSend.IRQ  =  lc3if.cb.IRQ;
+	    toSend.INTV =  lc3if.cb.INTV;
+	    toSend.INTP =  lc3if.cb.INTP;
       
             //Memory Mapped I/O Signals
-	    //toSend.MemoryMappedIO_in  =  $root.top.DUT.;
-	    //toSend.MemoryMappedIO_out =  $root.top.DUT.;
-	    //toSend.MemoryMappedIO_load = $root.top.DUT.;
+	    toSend.MemoryMappedIO_in  =  lc3if.cb.MemoryMappedIO_in;
+	    toSend.MemoryMappedIO_out =  lc3if.cb.MemoryMappedIO_out;
+	    toSend.MemoryMappedIO_load = lc3if.cb.MemoryMappedIO_load;
 	  
-	    Mon2Chk.put(toSend);
+	    SendToChecker(toSend);
      
 	 end // if ($root.top.DUT.memRDY)
 
