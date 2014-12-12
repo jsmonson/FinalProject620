@@ -14,9 +14,7 @@ enum { tbBR, tbADD, tbLD, tbST,
       end \
   end while(0) 
 
- typedef virtual lc3_interface vLC3if;
-   
-    
+ typedef virtual lc3_interface vLC3if;   
 `include "MemoryTransaction.sv"
 `include "Scoreboard.sv"
 `include "Generator.sv"
