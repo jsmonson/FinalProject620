@@ -68,7 +68,7 @@ class Scoreboard;
    endfunction // reset_sb
 
    function automatic void MbxRead();
-      if(!reset) begin
+      if(!reset || tCount > 0) begin
 	 Agt2SB.get(CurT);
 	 if(CurT.rst)
 	   reset = 1'b1;
@@ -83,15 +83,16 @@ class Scoreboard;
    endfunction // MbxRead
 
    function automatic void MbxWrite();
-      SB2Chk.put(CurT);
-      tCount--;
-      //if(count == 0)
+      if(tCount > 0) begin
+	 SB2Chk.put(CurT);
+	 tCount--;
+      end
    endfunction // MbxWrite
 
    function automatic void run(int count);
       tCount = count;
       
-      forever begin
+      while ( tCount > 0) begin
 	 UpdateSB();
       end
    endfunction // run
