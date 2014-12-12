@@ -60,7 +60,7 @@ class Scoreboard;
       reset_sb();
    endfunction // new
 
-   task automatic reset_sb();
+   function automatic void reset_sb();
       //Start with Reset Program State
       PC = 16'd0;
       PSR = 16'd0;
@@ -72,7 +72,7 @@ class Scoreboard;
       reset = 0;
       foreach (RegFile[i])
 	RegFile[i] = 16'd0;
-   endtask // reset_sb
+   endfunction // reset_sb
 
    task automatic MbxRead();
       if(!reset || tCount > 0) begin

@@ -6,7 +6,7 @@ class Test0 extends component;
    virtual task run_test();
       $display("Running Basic Test");
 
-      Env = new(1000);
+      Env = new(10, 20);
       Env.build();
       Env.run();
 

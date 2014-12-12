@@ -1,3 +1,5 @@
+`define CLK_PERIOD 20
+
 interface lc3_interface(input bit clk);
    bit rst;
    bit [15:0] MCR;

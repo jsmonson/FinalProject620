@@ -44,9 +44,9 @@ output reg selMAR = 1'b0;
 output reg selEAB1 = 1'b0;
 output reg [1:0] selEAB2 = 2'b00;
 output reg selMDR = 1'b0;
-output logic selSPMUX;
+output logic [1:0] selSPMUX;
 output logic selPSRMUX;
-output logic selVectorMUX;
+output logic [1:0] selVectorMUX;
 output logic SetPriv;
    
 output reg ldPC = 1'b0;

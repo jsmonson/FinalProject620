@@ -33,7 +33,7 @@ class Checker;
 	 end	 
 	 //Tell the Generator to 
 	 // Generate the Next Transaction
-	 $display("Sending Generate Next Transaction");
+	 $display("@%0d: Checker : Transaction Complete... Triggering Generator", $time);
 	 -> GenNextTrans;
       end
    endtask // run2
@@ -41,16 +41,18 @@ class Checker;
       $display("Add Code to Check State Here!");
    endtask // CheckState
 
-   function compare16(bit [15:0] a, bit [15:0] b, string value);
+   function void compare16(bit [15:0] a, bit [15:0] b, string value);
       if(a!=b) begin
 	 $display("@%0d: Checker : Bad Compare of %s", $time, value);
-	 $finish;
+	 $display("Scoreboard: %04x Monitor: %04x", a, b);
+      	 $finish;
       end
    endfunction // compare16
 
-    function compare1(bit a, bit  b, string value);
+    function void compare1(bit a, bit  b, string value);
       if(a!=b) begin
 	 $display("@%0d: Checker : Bad Compare of %s", $time, value);
+	 $display("Scoreboard: %d Monitor: %d", a, b);
 	 $finish;
       end
    endfunction // compare16
@@ -59,6 +61,7 @@ class Checker;
       if(fromScb.rst == 1'b1 || fromMon.rst == 1'b1) begin
 	 if(fromScb.rst != fromMon.rst) begin
 	    $display("@%0d: Checker : Reset Mismatch : Transaction Timestamp: %0d", $time, fromMon.timestamp);
+	    $finish;	   
 	 end
       end else begin
 	 compare16(fromScb.Address, fromMon.Address, "Address");

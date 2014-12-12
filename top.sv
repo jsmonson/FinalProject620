@@ -1,12 +1,13 @@
 
 module top;
   bit clk;
+      
   initial begin
-	forever #10 clk = ~clk;
+	forever #(`CLK_PERIOD/2) clk = ~clk;
   end
   initial begin
 	lc3_if.rst <= 1;
-	#5;
+	#(`CLK_PERIOD*5);
 	lc3_if.rst <= 0;
   end
   lc3_interface lc3_if(clk);

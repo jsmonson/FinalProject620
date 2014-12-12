@@ -2,13 +2,15 @@ class Monitor;
    
    vLC3if lc3if;
    int tCount;
+   int clock_period;
    
    mailbox #(MemoryTransaction) Mon2Chk;
    MemoryTransaction toSend;
     
-   function new(mailbox #(MemoryTransaction) Mon2Chki, vLC3if lc3ifi);
+   function new(mailbox #(MemoryTransaction) Mon2Chki, vLC3if lc3ifi, int clock_periodi);
       Mon2Chk = Mon2Chki;
       lc3if = lc3ifi;
+      clock_period = clock_periodi;      
    endfunction // new
 
    task SendToChecker(MemoryTransaction T);
@@ -51,7 +53,7 @@ class Monitor;
      
 	 end // if ($root.top.DUT.memRDY)
 
-	 #1; //Wait one cycle
+	 #20; //Wait one cycle
       end 
    endtask // run
 
