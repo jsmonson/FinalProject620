@@ -1,10 +1,10 @@
 package EnvironmentPkg;
 
-enum { BR, ADD, LD, ST,
-       JSR, AND, LDR, STR,
-       RTI, NOT, LDI, STI,
-       JMP, RES, LEA, TRAP
-     } Opcodes; 
+enum { tbBR, tbADD, tbLD, tbST,
+       tbJSR, tbAND, tbLDR, tbSTR,
+       tbRTI, tbNOT, tbLDI, tbSTI,
+       tbJMP, tbRES, tbLEA, tbTRAP
+     } tb_Opcodes; 
 
   `define SV_RAND_CHECK(r)\
   do begin \
@@ -13,7 +13,10 @@ enum { BR, ADD, LD, ST,
           `__FILE__, `__LINE__, `"r`"); \
       end \
   end while(0) 
+
+ typedef virtual lc3_interface vLC3if;
    
+    
 `include "MemoryTransaction.sv"
 `include "Scoreboard.sv"
 `include "Generator.sv"

@@ -26,7 +26,7 @@ class Checker;
 	 if(SBTrans.EndOfInstructionCycle)
 	   CheckState();
 	 else begin
-	    SB2Mon.get(MonTrans);
+	    Mon2Chk.get(MonTrans);
 	    CheckTrans();
 	 end	 
 	 //Tell the Generator to 

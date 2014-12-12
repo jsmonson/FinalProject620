@@ -1,13 +1,16 @@
 class Monitor;
-
+   
+   vLC3if lc3if;
+   
    mailbox #(MemoryTransaction) Mon2Chk;
    MemoryTransaction toSend;
     
-   function new(mailbox #(MemoryTransaction) Mon2Chki);
+   function new(mailbox #(MemoryTransaction) Mon2Chki, vLC3if lc3ifi);
       Mon2Chk = Mon2Chki;
+      lc3if = lc3ifi;
    endfunction // new
 
-   function run();
+   task run();
       forever begin
 	 
 	 if($root.top.DUT.rst) begin
@@ -39,7 +42,7 @@ class Monitor;
 
 	 #1; //Wait one cycle
       end 
-   endfunction // run
+   endtask // run
 
 endclass // Monitor
 

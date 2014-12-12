@@ -1,11 +1,11 @@
-TOPLEVEL=lc3
-VERILOG_FILES= JoshLC3/lc3Pkg.sv EnvironmentPkg.sv 
+TOPLEVEL=top
+VERILOG_FILES= lc3_interface.sv EnvironmentPkg.sv factory_pkg.sv test_program.sv JoshLC3/lc3Pkg.sv JoshLC3/lc3_control.sv JoshLC3/lc3_datapath.sv JoshLC3/lc3.sv  top.sv
 
 questa_gui: 
 	vlib work
 	vmap work work
 	vlog -mfcu -sv ${VERILOG_FILES}
-	vsim -novopt -coverage -msgmode both -displaymsgmode both -do "view wave;do wave.do;run -all" ${TOPLEVEL}
+#	vsim -novopt -coverage -msgmode both -displaymsgmode both -do "view wave;do wave.do;run -all" ${TOPLEVEL}
 
 questa_batch: ${VERILOG_FILES} clean
 	vlib work

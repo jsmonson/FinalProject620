@@ -31,7 +31,7 @@ class MemoryTransaction;
    //Change these later... if necessary
    constraint c_mcr { MCR==0; };
    constraint c_rst { rst==0; };
-     constraint r_cyc { reset_cycles == 1; }; 
+   constraint r_cyc { reset_cycles == 1; }; 
    //Instruction Helper Functions   
    function bit [3:0] Opcode();
       return DataOut[15:12];
@@ -72,7 +72,11 @@ class MemoryTransaction;
    function bit [8:0] PCoffset9();
       return DataOut[8:0];
    endfunction // PCoffset9
-   
+
+   function bit [10:0] PCoffset11();
+      return DataOut[10:0];
+   endfunction // PCoffset11
+      
    function bit  n();
       return DataOut[11];
    endfunction // n

@@ -25,6 +25,8 @@ class Scoreboard;
 
    bit 	      reset;
 
+   int 	      tCount;
+   
    MemoryTransaction CurT;
    
    //End Of Instruction Cycle Transaction
@@ -40,7 +42,7 @@ class Scoreboard;
    Ext #(9) Ext9;   
    Ext #(11) Ext11;
     
-   function new (mailbox #(MemoryTransaction) Agt2SBi, SB2Chki);
+   function new (mailbox #(MemoryTransaction) Agt2SBi, mailbox #(MemoryTransaction) SB2Chki);
 
       EOIC = new ();
       EOIC.EndOfInstructionCycle = 1'b1;
@@ -68,7 +70,7 @@ class Scoreboard;
    function automatic void MbxRead();
       if(!reset) begin
 	 Agt2SB.get(CurT);
-	 if(CurT.reset)
+	 if(CurT.rst)
 	   reset = 1'b1;
 	 if(CurT.IRQ) begin
 	    if(CurT.INTP > PSR[10:8]) begin
@@ -81,11 +83,15 @@ class Scoreboard;
    endfunction // MbxRead
 
    function automatic void MbxWrite();
+      count--;
+      
       SB2Chk.put(CurT);
    endfunction // MbxWrite
 
-   function automatic void run(int InstructionCycles);
-      repeat(InstructionCycles) begin
+   function automatic void run(int count);
+      tCount = count;
+      
+      forever begin
 	 UpdateSB();
       end
    endfunction // run
@@ -95,14 +101,14 @@ class Scoreboard;
       //Read Next Transaction
       MbxRead();
       CurT.Address = Address;
-      CurT.WE = 1'b0; //Read Operation
-      CurT.EN = 1'b1; //Memory Enable
+      CurT.we = 1'b0; //Read Operation
+      CurT.en = 1'b1; //Memory Enable
       if(Address == 16'hFE00 ||
 	 Address == 16'hFE02 ||
 	 Address == 16'hFE04 ||
 	 Address == 16'hFE06) begin
 	 //On MIO Read Enable Should be Low
-	 CutT.EN = 1'b0;
+	 CurT.en = 1'b0;
       end
       //Pass to Checker
       MbxWrite();    
@@ -112,28 +118,17 @@ class Scoreboard;
       MbxRead();
       CurT.Address = Address;
       CurT.DataIn = Data;     
-      CurT.WE = 1'b1;
-      CurT.EN = 1'b1;
-      if(Address == 16'hFE00) begin
-	 //KeyBoard Status Register Write
-	 CurT.EN = 1'b0;
-	 CurT.ldKBSR = 1'b1;
-	 CurT.KBSRo = Data;
-      end else if (Address == 16'hFE02) begin
-	 //Keyboard Data Register
-	 CurT.EN = 1'b0;
-      end else if (Address == 16'hFE04) begin
-	 //Display Status Register
-	 CurT.EN = 1'b0;
-	 CurT.ldDSR = 1'b1;
-	 CurT.DSRo = Data;	 
-      end else if (Address == 16'hFE06) begin
-	 //Display Data Register
-	 CurT.EN = 1'b0;
-	 CurT.ldDDR = 1'b1;
-	 CurT.DDR = Data;
+      CurT.we = 1'b1;
+      CurT.en = 1'b1;
+      CurT.MemoryMappedIO_out = Data;
+      CurT.MemoryMappedIO_load = 1'b0;
+
+      if(Address >= 16'hFE00) begin
+	 CurT.MemoryMappedIO_load = 1'b1;
+	 CurT.en = 1'b0;
+	 CurT.we = 1'b0;
       end
-      //Pass to Checker
+
       MbxWrite();   
    endfunction // WriteTransaction
    
@@ -142,27 +137,27 @@ class Scoreboard;
           
      if(INT) begin
 	incrPC();
-	LC3_INT();
+	Interrupt();
      end else begin
 	ReadTransaction(PC);
 	incrPC();
 	case (CurT.Opcode) 
-	  BR: LC3_BR();
-          ADD: LC3_ADD();
-          LD: LC3_LD();
-	  ST: LC3_ST();
-	  JSR: LC3_JSR();
-	  AND: LC3_AND();
-	  LDR: LC3_LDR();
-	  STR: LC3_STR();
-	  RTI: ;
-	  NOT: LC3_NOT();
-	  LDI: LC3_LDI();
-	  STI: LC3_STI();
-	  JMP: LC3_JMP();
-	  RES: ;
-	  LEA: LC3_LEA();
-	  TRAP: LC3_TRAP();
+	  tbBR: LC3_BR();
+          tbADD: LC3_ADD();
+          tbLD: LC3_LD();
+	  tbST: LC3_ST();
+	  tbJSR: LC3_JSR();
+	  tbAND: LC3_AND();
+	  tbLDR: LC3_LDR();
+	  tbSTR: LC3_STR();
+	  tbRTI: LC3_RTI();
+	  tbNOT: LC3_NOT();
+	  tbLDI: LC3_LDI();
+	  tbSTI: LC3_STI();
+	  tbJMP: LC3_JMP();
+	  tbRES: InvalidInstructionException();
+	  tbLEA: LC3_LEA();
+	  tbTRAP: LC3_TRAP();
       endcase // case (I.Opcode)
      end // else: !if(CurT.INT)
     
@@ -206,7 +201,7 @@ class Scoreboard;
 
    function automatic void LC3_AND();
        
-      if(CurT.instr[5]==0) begin
+      if(CurT.DataOut[5]==0) begin
 	 //Register Mode
 	 RegFile[CurT.DR()] = RegFile[CurT.SR1()] & RegFile[CurT.SR2()];
       end else begin
@@ -346,7 +341,7 @@ class Scoreboard;
    endfunction // Interrupt
 	 
    function automatic void PriveledgeModeException();
-      SaveUSPLoadSS();
+      SaveUSPLoadSSP();
       SavePSRAndPCLoadVector(16'h0100);
       SetSupervisorMode();      
    endfunction // PriveledgeModeException
