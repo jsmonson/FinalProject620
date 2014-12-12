@@ -1,8 +1,14 @@
 
 module top;
   bit clk;
-  always #10 clk = ~clk;
-  
+  initial begin
+	forever #10 clk = ~clk;
+  end
+  initial begin
+	lc3_if.rst <= 1;
+	#5;
+	lc3_if.rst <= 0;
+  end
   lc3_interface lc3_if(clk);
   test tb();
   lc3 LC3(.clk(clk),
