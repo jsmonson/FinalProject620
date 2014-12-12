@@ -21,7 +21,7 @@ interface lc3_interface(input bit clk);
    bit [2:0]  INTP;
   
    clocking cb @(posedge clk);
-      output   rst, MCR;
+      output  MCR;
       input   memory_addr, memory_din, memWE, memEN;
       output  memory_dout, memRDY;
       input   MemoryMappedIO_load, MemoryMappedIO_out;

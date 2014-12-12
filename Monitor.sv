@@ -22,7 +22,7 @@ class Monitor;
       tCount = count;
        while (tCount > 0) begin
 	 
-	 if(lc3if.cb.rst) begin
+	 if(lc3if.rst) begin
 	    toSend = new ();
 	    toSend.rst = 1'b1;	    
 	    SendToChecker(toSend);
