@@ -1,5 +1,5 @@
 TOPLEVEL=top
-VERILOG_FILES= lc3_interface.sv EnvironmentPkg.sv factory_pkg.sv test_program.sv JoshLC3/lc3Pkg.sv JoshLC3/lc3_control.sv JoshLC3/lc3_datapath.sv JoshLC3/lc3.sv  top.sv
+VERILOG_FILES= lc3_interface.sv EnvironmentPkg.sv factory_pkg.sv test_program.sv JoshLC3/lc3Pkg.sv JoshLC3/lc3_control.sv JoshLC3/lc3_datapath.sv JoshLC3/lc3.sv  top.sv 
 
 questa_gui: 
 	vlib work
@@ -15,3 +15,8 @@ questa_batch: ${VERILOG_FILES} clean
 
 clean:
 	@rm -rf work transcript vsim.wlf
+	
+
+.PHONY: TestGood
+Test0: factory
+	vsim -c test -do "run -all" +TESTNAME=Test0
