@@ -26,7 +26,7 @@
   
       gen = new(gen2agt, chk2gen);
       agt = new(gen2agt,agt2drv, agt2scb,agt2scbhs);
-      drv = new(agt2drv, 3);
+      drv = new(agt2drv, 3, vlc3if);
       mon = new(mon2chk, vlc3if);
       scb = new(agt2scb, scb2chk);
       chk = new(scb2chk, mon2chk, 
