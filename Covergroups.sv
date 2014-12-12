@@ -1,6 +1,5 @@
 covergroup Cov();
     option.per_instance = 1;
-    option.auto_bin_max = 256;
     opcodes: coverpoint state {  } // make sure each opcode exe
     src: coverpoint tr.data_out[3:2];
     dst: coverpoint tr.data_out[1:0];
