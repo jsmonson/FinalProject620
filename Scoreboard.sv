@@ -83,9 +83,9 @@ class Scoreboard;
    endfunction // MbxRead
 
    function automatic void MbxWrite();
-      count--;
-      
       SB2Chk.put(CurT);
+      tCount--;
+      //if(count == 0)
    endfunction // MbxWrite
 
    function automatic void run(int count);

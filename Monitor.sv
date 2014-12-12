@@ -10,7 +10,7 @@ class Monitor;
       lc3if = lc3ifi;
    endfunction // new
 
-   task run();
+   task run(int count);
       forever begin
 	 
 	 if($root.top.DUT.rst) begin
