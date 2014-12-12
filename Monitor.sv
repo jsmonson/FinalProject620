@@ -23,12 +23,9 @@ class Monitor;
        while (tCount > 0) begin
 	 
 	 if(lc3if.rst) begin
-<<<<<<< HEAD
 	    //Wait for the Reset to fall
 	    while(lc3if.rst) #1;
 	    //Create a Reset Transaction and Send it.
-=======
->>>>>>> 7ec97433358c45c193517e9def6f8cc52e34452e
 	    toSend = new ();
 	    toSend.rst = 1'b1;	    
 	    SendToChecker(toSend);
