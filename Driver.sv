@@ -1,8 +1,10 @@
 class Driver;
       mailbox #(MemoryTransaction) agt2drv;
       MemoryTransaction tr;
-      function new(input mailbox #(MemoryTransaction) agt2drv);
+	  int mem_tran_num;
+      function new(input mailbox #(MemoryTransaction) agt2drv, input int mem_tran_num);
         this.agt2drv = agt2drv;
+		this.mem_tran_num = mem_tran_num;
 	  endfunction
       task run(input int count);
 		repeat(count) begin
@@ -10,7 +12,7 @@ class Driver;
 			@$root.top.lc3_if.cb;
 			if (tr.rst) begin
 				$root.top.lc3_if.rst <= 1'b1;
-				(tr.reset_cycles)@$root.top.lc3_if.cb;
+				repeat(tr.reset_cycles)@$root.top.lc3_if.cb;
 			end
 			else begin
 				$root.top.IRQ <= tr.IRQ;
@@ -23,9 +25,9 @@ class Driver;
 				$root.top.lc3_if.memory_dout <= tr.DataOut;
 				$root.top.lc3_if.MemoryMappedIO_in <= tr.MemoryMappedIO_in;
 				$root.top.lc3_if.MCR <= tr.MCR;
-				memRDY <= 1;
+				$root.top.lc3_if.memRDY <= 1;
 				@$root.top.lc3_if.cb;
-				memRDY <= 0;
+				$root.top.lc3_if.memRDY <= 0;
 			end
 		end 
     endtask

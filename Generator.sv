@@ -6,7 +6,6 @@
         this.gen2agt = gen2agt;
 		this.chk2gen =chk2gen;
     endfunction
-	Opcode op;
     task run(input int count);
         repeat(count) begin
             tr = new();

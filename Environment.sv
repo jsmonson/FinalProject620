@@ -14,7 +14,7 @@
 	  agt2scb = new(1);
       gen = new(gen2agt, chk2gen);
       agt = new(gen2agt,agt2drv, agt2scb,agt2scbhs);
-      drv = new(agt2drv);
+      drv = new(agt2drv, 3);
     endfunction
   
     task run();
