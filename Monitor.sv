@@ -11,39 +11,41 @@ class Monitor;
       lc3if = lc3ifi;
    endfunction // new
 
-   function automatic void SendToChecker(MemoryTransaction T);
+   task SendToChecker(MemoryTransaction T);
       $display("@%0d: Monitor Sending Transaction to Checker", $time);
       T.timestamp = $time;
       tCount--;
       Mon2Chk.put(T);
-   endfunction // SendToChecker
+   endtask // SendToChecker
       
    task run(int count);
       tCount = count;
        while (tCount > 0) begin
 	 
-	 if(lc3if.cb.rst) begin
+	 if(lc3if.rst) begin
+	    //Wait for the Reset to fall
+	    while(lc3if.rst) #1;
+	    //Create a Reset Transaction and Send it.
 	    toSend = new ();
 	    toSend.rst = 1'b1;	    
 	    SendToChecker(toSend);
-	 end else if (lc3if.cb.memRDY) begin
-	    
+	 end else if (lc3if.memRDY) begin
 	    toSend = new ();
-	    toSend.Address = lc3if.cb.memory_addr;
-            toSend.DataOut = lc3if.cb.memory_dout;
-	    toSend.DataIn =  lc3if.cb.memory_din;
-	    toSend.we =  lc3if.cb.memWE;
-            toSend.en =  lc3if.cb.memEN; 
+	    toSend.Address = lc3if.memory_addr;
+            toSend.DataOut = lc3if.memory_dout;
+	    toSend.DataIn =  lc3if.memory_din;
+	    toSend.we =  lc3if.memWE;
+            toSend.en =  lc3if.memEN; 
 	    toSend.rst = 1'b0;
 	    
-	    toSend.IRQ  =  lc3if.cb.IRQ;
-	    toSend.INTV =  lc3if.cb.INTV;
-	    toSend.INTP =  lc3if.cb.INTP;
+	    toSend.IRQ  =  lc3if.IRQ;
+	    toSend.INTV =  lc3if.INTV;
+	    toSend.INTP =  lc3if.INTP;
       
             //Memory Mapped I/O Signals
-	    toSend.MemoryMappedIO_in  =  lc3if.cb.MemoryMappedIO_in;
-	    toSend.MemoryMappedIO_out =  lc3if.cb.MemoryMappedIO_out;
-	    toSend.MemoryMappedIO_load = lc3if.cb.MemoryMappedIO_load;
+	    toSend.MemoryMappedIO_in  =  lc3if.MemoryMappedIO_in;
+	    toSend.MemoryMappedIO_out =  lc3if.MemoryMappedIO_out;
+	    toSend.MemoryMappedIO_load = lc3if.MemoryMappedIO_load;
 	  
 	    SendToChecker(toSend);
      

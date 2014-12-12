@@ -1,5 +1,6 @@
 class Ext #(INPUT_SIZE);
    function automatic bit[15:0] SEXT(input bit [INPUT_SIZE-1:0] toExt);
+      $display("");
       return { {(16-INPUT_SIZE){toExt[INPUT_SIZE-1]}}, toExt };    
    endfunction // SEXT
 
@@ -46,14 +47,20 @@ class Scoreboard;
 
       EOIC = new ();
       EOIC.EndOfInstructionCycle = 1'b1;
-            
+
+      Ext5 = new();
+      Ext6 = new();
+      Ext8 = new();
+      Ext9 = new();   
+      Ext11 = new();
+      
       Agt2SB = Agt2SBi;
       SB2Chk = SB2Chki;
       
       reset_sb();
    endfunction // new
 
-   function automatic void reset_sb();
+   task automatic reset_sb();
       //Start with Reset Program State
       PC = 16'd0;
       PSR = 16'd0;
@@ -65,11 +72,12 @@ class Scoreboard;
       reset = 0;
       foreach (RegFile[i])
 	RegFile[i] = 16'd0;
-   endfunction // reset_sb
+   endtask // reset_sb
 
-   function automatic void MbxRead();
+   task automatic MbxRead();
       if(!reset || tCount > 0) begin
 	 Agt2SB.get(CurT);
+	 $display("@%0d: Scoreboard: Received Transaction", $time);
 	 if(CurT.rst)
 	   reset = 1'b1;
 	 if(CurT.IRQ) begin
@@ -80,25 +88,26 @@ class Scoreboard;
 	    end
 	 end
       end
-   endfunction // MbxRead
+   endtask // MbxRead
 
-   function automatic void MbxWrite();
+   task automatic MbxWrite();
       if(tCount > 0) begin
+	 $display("@%0d: Scoreboard : Sending Transaction to Checker", $time);
 	 SB2Chk.put(CurT);
 	 tCount--;
       end
-   endfunction // MbxWrite
+   endtask // MbxWrite
 
-   function automatic void run(int count);
+   task automatic run(int count);
       tCount = count;
       
       while ( tCount > 0) begin
 	 UpdateSB();
       end
-   endfunction // run
+   endtask // run
    
    
-   function automatic void ReadTransaction(bit [15:0] Address);
+   task automatic ReadTransaction(bit [15:0] Address);
       //Read Next Transaction
       MbxRead();
       CurT.Address = Address;
@@ -113,9 +122,9 @@ class Scoreboard;
       end
       //Pass to Checker
       MbxWrite();    
-   endfunction // ReadTransaction
+   endtask // ReadTransaction
 
-   function automatic void WriteTransaction(bit [15:0] Address, bit [15:0] Data);
+   task automatic WriteTransaction(bit [15:0] Address, bit [15:0] Data);
       MbxRead();
       CurT.Address = Address;
       CurT.DataIn = Data;     
@@ -131,10 +140,10 @@ class Scoreboard;
       end
 
       MbxWrite();   
-   endfunction // WriteTransaction
+   endtask // WriteTransaction
    
    
-   function automatic void UpdateSB();
+   task automatic UpdateSB();
           
      if(INT) begin
 	incrPC();
@@ -169,14 +178,14 @@ class Scoreboard;
      //This tell the Checker to Compare SB and DUT State
      SB2Chk.put(EOIC);
 	
-   endfunction // Update
+   endtask // Update
 
-   function automatic void incrPC();
+   task automatic incrPC();
       PC = PC + 1;
-   endfunction // incrPC
+   endtask // incrPC
    
    
-   function automatic void setcc(bit [15:0] val);
+   task automatic setcc(bit [15:0] val);
       if(val == 16'd0) begin
 	PSR[2] = 0; PSR[1] = 1; PSR[0] = 0;
       end else if (val[15] == 1'b1) begin
@@ -184,9 +193,9 @@ class Scoreboard;
       end else begin
 	PSR[2] = 0; PSR[1] = 0; PSR[0] = 1;
       end
-   endfunction // setcc
+   endtask // setcc
       
-   function automatic void LC3_ADD();
+   task automatic LC3_ADD();
       
       if(CurT.DataOut[5]==0) begin
 	 //Register Mode
@@ -198,9 +207,9 @@ class Scoreboard;
 	 
       setcc(RegFile[CurT.DR()]);
 	
-   endfunction // LC3_ADD
+   endtask // LC3_ADD
 
-   function automatic void LC3_AND();
+   task automatic  LC3_AND();
        
       if(CurT.DataOut[5]==0) begin
 	 //Register Mode
@@ -212,76 +221,76 @@ class Scoreboard;
 	 
       setcc(RegFile[CurT.DR()]);
 	
-   endfunction // LC3_AND
+   endtask // LC3_AND
 
-   function automatic void LC3_BR();
+   task automatic LC3_BR();
       if((CurT.n() && PSR[2]) || (CurT.z() && PSR[1]) || (CurT.p() && PSR[0]))
 	PC = PC + Ext9.SEXT(CurT.PCoffset9());
-   endfunction // LC3_BR
+   endtask // LC3_BR
    
-   function automatic void LC3_JMP();
+   task automatic LC3_JMP();
       //This also covers RET
       PC = RegFile[CurT.BaseR()];
-   endfunction // LC3_JMP
+   endtask // LC3_JMP
 
-   function automatic void LC3_JSR();
+   task automatic LC3_JSR();
       RegFile[7] = PC;
       if(CurT.DataOut[11]==1)
 	PC = CurT.BaseR();
       else
 	PC = PC + Ext11.SEXT(CurT.PCoffset11());
       
-   endfunction // LC3_JSR
+   endtask // LC3_JSR
 
-   function automatic void LC3_LD();
+   task automatic LC3_LD();
       ReadTransaction(PC + Ext9.SEXT(CurT.PCoffset9()));
       RegFile[CurT.DR()] = CurT.DataOut;
       setcc(CurT.DataOut);
-   endfunction // LC3_LD
+   endtask // LC3_LD
 
-   function automatic void LC3_LDI();
+   task automatic LC3_LDI();
       ReadTransaction(PC+Ext9.SEXT(CurT.PCoffset9()));
       ReadTransaction(CurT.DataOut);
       RegFile[CurT.DR()] = CurT.DataOut;
       setcc(CurT.DataOut);
-   endfunction // LC3_LDI
+   endtask // LC3_LDI
 
-   function automatic void LC3_LDR();
+   task automatic LC3_LDR();
       ReadTransaction(CurT.BaseR()+Ext6.SEXT(CurT.offset6));
       RegFile[CurT.DR()] = CurT.DataOut;
       setcc(CurT.DataOut);
-   endfunction // LC3_LDR
+   endtask // LC3_LDR
 
-   function automatic void LC3_LEA();
+   task automatic LC3_LEA();
       RegFile[CurT.DR()] = PC + Ext9.SEXT(CurT.PCoffset9());
       setcc(RegFile[CurT.DR()]);
-   endfunction // LC3_LDR
+   endtask // LC3_LDR
 
-   function automatic void LC3_NOT();
+   task automatic LC3_NOT();
       RegFile[CurT.DR()] = ~RegFile[CurT.SR()];
       setcc(RegFile[CurT.DR()]);
-   endfunction // LC3_NOT
+   endtask // LC3_NOT
 
-   function automatic void LC3_ST();
+   task automatic LC3_ST();
       WriteTransaction(PC + Ext9.SEXT(CurT.PCoffset9()), RegFile[CurT.SR()]);
-   endfunction // LC3_ST
+   endtask // LC3_ST
 
-   function automatic void LC3_STI();
+   task automatic LC3_STI();
       ReadTransaction(PC + Ext9.SEXT(CurT.PCoffset9()));
       WriteTransaction(CurT.DataOut, RegFile[CurT.SR()]);
-   endfunction // LC3_STI
+   endtask // LC3_STI
 
-   function automatic void LC3_STR();
+   task automatic LC3_STR();
       WriteTransaction(CurT.BaseR() + Ext6.SEXT(CurT.offset6), RegFile[CurT.SR()]);
-   endfunction // LC3_STR
+   endtask // LC3_STR
 
-   function automatic void LC3_TRAP();
+   task automatic LC3_TRAP();
       RegFile[7] = PC;
       ReadTransaction(Ext8.ZEXT(CurT.trapvect8));
       PC = CurT.DataOut;
-   endfunction // LC3_TRAP
+   endtask // LC3_TRAP
 
-   function automatic void LC3_RTI();
+   task automatic LC3_RTI();
       bit [15:0] TEMP;
       
       if(PSR[15] == 0) begin
@@ -295,24 +304,24 @@ class Scoreboard;
       end else
 	 PriveledgeModeException();
       	 
-   endfunction // LC3_RTI
+   endtask // LC3_RTI
 
-   function automatic void SetSupervisorMode();
+   task automatic SetSupervisorMode();
       PSR[15] = 1'b0;
-   endfunction // SetSupervisorMode
+   endtask // SetSupervisorMode
 
-   function automatic void SetUserMode();
+   task automatic SetUserMode();
       PSR[15] = 1'b1;
-   endfunction // SetUserMode
+   endtask // SetUserMode
       
-   function automatic void SaveUSPLoadSSP();
+   task automatic SaveUSPLoadSSP();
       //Save the User Stack Pointer
       SavedUSP = RegFile[6];
       //Load the Supervisor Stack Pointer
       RegFile[6] = SavedSSP;
-   endfunction // SaveUSPLoadSSP
+   endtask // SaveUSPLoadSSP
    
-   function automatic void SavePSRAndPCLoadVector(bit [15:0] Vector);
+   task automatic SavePSRAndPCLoadVector(bit [15:0] Vector);
       //Decrement SSP
       RegFile[6] = RegFile[6] - 1;
       //Put the PSR on the Supervisor Stack
@@ -324,9 +333,9 @@ class Scoreboard;
       //Update PC With Interrupt or Exception Vector
       ReadTransaction(Vector);
       PC = CurT.DataOut;
-   endfunction
+   endtask
       
-   function automatic void Interrupt();
+   task automatic Interrupt();
       
       if(PSR[15] == 1'b1) begin
 	 SaveUSPLoadSSP();
@@ -339,21 +348,21 @@ class Scoreboard;
       
       SetSupervisorMode();
                  
-   endfunction // Interrupt
+   endtask // Interrupt
 	 
-   function automatic void PriveledgeModeException();
+   task automatic PriveledgeModeException();
       SaveUSPLoadSSP();
       SavePSRAndPCLoadVector(16'h0100);
       SetSupervisorMode();      
-   endfunction // PriveledgeModeException
+   endtask // PriveledgeModeException
 
-   function automatic void InvalidInstructionException();
+   task automatic InvalidInstructionException();
       if(PSR[15] == 1'b1) begin
 	 SaveUSPLoadSSP();
       end
       SavePSRAndPCLoadVector(16'h0101);
       SetSupervisorMode();
-   endfunction // InvalidInstructionException
+   endtask // InvalidInstructionException
      
    
    //Write Exception Handlers and 

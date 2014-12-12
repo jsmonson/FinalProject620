@@ -11,9 +11,8 @@ class Agent;
       task run(int count);
         repeat(count) begin
             gen2agt.get(tr);
-			agt2drv.put(tr);
-            wait (agt2scbhs.triggered);
-            agt2drv.put(tr);         
+	    agt2drv.put(tr);
+            agt2scb.put(tr);         
         end
       endtask
   endclass

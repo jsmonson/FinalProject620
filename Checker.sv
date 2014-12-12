@@ -16,30 +16,40 @@ class Checker;
       SB = SBi;     
    endfunction // new
 
-   function automatic void run (int count);
+   task run (int count);
       
       MemoryTransaction SBTrans;
       MemoryTransaction MonTrans;
     
       repeat (count) begin
 	 SB2Chk.get(SBTrans);
+	 $display("@%0d: Checker : Recieved from Scoreboard ", $time);
 	 if(SBTrans.EndOfInstructionCycle)
 	   CheckState();
 	 else begin
 	    Mon2Chk.get(MonTrans);
-	    CheckTrans();
+	    CheckTrans(SBTrans, MonTrans);
+	    $display(" @%0d: Checker : Recieved from Monitor ", $time);
 	 end	 
 	 //Tell the Generator to 
 	 // Generate the Next Transaction
+	 $display("Sending Generate Next Transaction");
 	 -> GenNextTrans;
       end
-   endfunction // run
-
-   function automatic void CheckState();
-   endfunction // CheckState
-
-   function automatic void CheckTrans();
-   endfunction // CheckTrans
+   endtask // run2
+   task automatic  CheckState();
+   endtask // CheckState
+   
+   task automatic CheckTrans(MemoryTransaction fromScb, MemoryTransaction fromMon);
+      if(fromScb.rst == 1'b1 || fromMon.rst == 1'b1) begin
+	 if(fromScb.rst != fromMon.rst) begin
+	    $display("@%0d: Checker : Reset Mismatch : Transaction Timestamp: %0d", $time, fromMon.timestamp);
+	 end
+      end else begin
+	 $display("Compare Transactions");
+	 
+      end
+   endtask // CheckTrans
    
 endclass // Checker
 
