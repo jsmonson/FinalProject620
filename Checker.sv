@@ -23,17 +23,17 @@ class Checker;
     
       repeat (count) begin
 	 SB2Chk.get(SBTrans);
-	 $display("@%0d: Checker : Recieved from Scoreboard ", $time);
+	 $display("@%0d: Checker : Received from Scoreboard %d ", $time , SBTrans.ID());
 	 if(SBTrans.EndOfInstructionCycle)
 	   CheckState();
 	 else begin
 	    Mon2Chk.get(MonTrans);
 	    CheckTrans(SBTrans, MonTrans);
-	    $display(" @%0d: Checker : Recieved from Monitor ", $time);
+	    $display(" @%0d: Checker : Received from Monitor %d", $time , MonTrans.ID());
 	 end	 
 	 //Tell the Generator to 
 	 // Generate the Next Transaction
-	 $display("@%0d: Checker : Transaction Complete... Triggering Generator", $time);
+	 $display("@%0d: Checker : Transaction Complete... Triggering Generator", $time );
 	 -> GenNextTrans;
       end
    endtask // run2
@@ -43,7 +43,7 @@ class Checker;
 
    function void compare16(bit [15:0] a, bit [15:0] b, string value);
       if(a!=b) begin
-	 $display("@%0d: Checker : Bad Compare of %s", $time, value);
+	 $display("@%0d: Checker : Bad Compare of %s", $time , value);
 	 $display("Scoreboard: %04x Monitor: %04x", a, b);
       	 $finish;
       end

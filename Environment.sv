@@ -6,7 +6,7 @@
     Generator gen;
     Agent agt;
     Driver drv;
-    Monitor mon;
+    Monitor mon; 
     Scoreboard scb;
     Checker chk;
  

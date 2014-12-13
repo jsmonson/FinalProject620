@@ -17,8 +17,7 @@ class Driver;
 		this.lc3if = lc3if;
 	  endfunction
       task run(input int count);
-	        repeat(5) @lc3if.cb;
-	 
+	    repeat(5) @lc3if.cb;
 		repeat(count) begin
 			agt2drv.get(tr);
 			foreach(cbs[i]) cbs[i].pre_tx(tr); // callbacks
@@ -33,9 +32,9 @@ class Driver;
 	endtask*/
 	task transmit(MemoryTransaction tr);
 		#1;
-		$display("[%0t] Drv: Sending Transaction...",$time);
+		$display("@%0d: Driver : Driving Transaction %d",$time, tr.ID());
 		if (tr.rst) begin
-			$display("[%0t] Reset!",$time);
+			$display("@%0t: Reset!",$time);
 			lc3if.rst <= 1'b1;
 			repeat(tr.reset_cycles) @lc3if.cb;
 		end
