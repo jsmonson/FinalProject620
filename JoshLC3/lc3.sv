@@ -68,6 +68,7 @@ logic selMDR;
 
 logic flagWE;
 logic enaMDR;
+logic memWEi;
    
 logic PRIV;
 logic enaPSR;
@@ -101,7 +102,7 @@ lc3_datapath DATAPATH(clki, rst,
 		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
 		     IRQ, INTP, INTV, INT,
 		     MemoryMappedIO_in, MemoryMappedIO_out, MemoryMappedIO_load,
-                     memory_din, memory_dout, memory_addr, memEN, memWE);
+                     memory_din, memory_dout, memory_addr, memEN, memWEi);
 
 lc3_control CONTROL( clki, rst, 
                      IR, N, Z, P, PRIV,  
@@ -112,6 +113,6 @@ lc3_control CONTROL( clki, rst,
 		     enaPSR, enaPCM1, enaSP, enaVector,
 		     ldSavedUSP, ldSavedSSP, ldPriority, ldVector, ldCC, ldPriv,
 		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
-	             ldMAR, ldMDR, selMDR, memWE, flagWE, enaMDR, memRDY);  
+	             ldMAR, ldMDR, selMDR, memWEi, flagWE, enaMDR, memRDY);  
 
 endmodule
