@@ -7,10 +7,12 @@
 		this.chk2gen =chk2gen;
     endfunction
     task run(input int count);
+       int id = 0;
        tr = new();
         repeat(count) begin
             `SV_RAND_CHECK(tr.randomize());
-	    $display("@%0d: Generator : Sending Transaction",$time);
+	    tr.id = id++;
+	    $display("@%0d: Generator : Sending Transaction %0d",$time,tr.id);
 	    gen2agt.put(tr);
 	    @chk2gen;
         end

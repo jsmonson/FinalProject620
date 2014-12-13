@@ -479,7 +479,8 @@ always_comb begin
     ST2: begin
      //Mem[MAR] <- MDR
      if(memRDY) begin
-       memWE <= 1'b1; 
+       memWE <= 1'b1;
+       selMDR <= 1'b1;
        NextState <= FETCH0;
      end
     end

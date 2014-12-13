@@ -23,17 +23,17 @@ class Checker;
     
       repeat (count) begin
 	 SB2Chk.get(SBTrans);
-	 $display("@%0d: Checker : Recieved from Scoreboard ", $time);
+	 $display("@%0d: Checker : Recieved SB Transaction %0d ", $time, SBTrans.id);
 	 if(SBTrans.EndOfInstructionCycle)
 	   CheckState();
 	 else begin
 	    Mon2Chk.get(MonTrans);
 	    CheckTrans(SBTrans, MonTrans);
-	    $display(" @%0d: Checker : Recieved from Monitor ", $time);
+	    $display(" @%0d: Checker : Recieved MON Transaction %0d ", $time, MonTrans.id);
 	 end	 
 	 //Tell the Generator to 
 	 // Generate the Next Transaction
-	 $display("@%0d: Checker : Transaction Complete... Triggering Generator", $time);
+	 $display("@%0d: Checker : Transaction Complete... Retiring Transaction %0d", $time, SBTrans.id);
 	 -> GenNextTrans;
       end
    endtask // run2

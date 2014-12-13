@@ -10,7 +10,7 @@ module lc3_datapath ( clk, rst,
 		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
 		     IRQ, INTP, INTV, INT,
 		     MemoryMappedIO_in, MemoryMappedIO_out, MemoryMappedIO_load, 
-                     memory_din, memory_dout, memory_addr, memEN, memWE); 
+                     memory_din, memory_dout, memory_addr, memEN, memWEi, memWEo); 
 input logic clk;
 input logic rst;
 
@@ -49,7 +49,9 @@ output logic PRIV;
 output logic [15:0] memory_din;
 output logic [15:0] memory_addr; 
 output logic memEN;
-input logic memWE;
+input logic memWEi;
+output logic memWEo;
+   
    
    
 input logic 	    enaPSR;
@@ -127,6 +129,7 @@ logic [15:0] ZEXT;
 
 logic [15:0] memOut; 
 
+ 
 assign IR_OUT = IR; 
 assign N_OUT = PSR[2]; 
 assign Z_OUT = PSR[1];
@@ -334,17 +337,22 @@ assign SR2MUX = (IR[5]) ? SEXT4 : RB;
 assign MemoryMappedIO_out = MDR;
    
 always_comb begin
+  
+   
   //Default is Memory Read
-  memEN = 1'b1;
+  memWEo = 1'b0;
+  memEN = 1'b0;
   selINMUX = 1'b0; 
   MemoryMappedIO_load = 1'b0;
-   
-  //MemoryMappedIO Logic
-  if(MAR >= 16'hFE00 && selMDR == 1'b1) begin
-     //MemoryMappedIO Read
-     memEN = 0;
+
+  if(MAR < 16'hFE00) begin
+    //Memory Read/Write
+    memEN  = selMDR;
+    memWEo = memWEi;
+  end else if(MAR >= 16'hFE00 && selMDR == 1'b1) begin
+      //MemoryMappedIO Read
      selINMUX = 1'b1;    
-     if(memWE == 1'b1) begin
+     if(memWEi == 1'b1) begin
        //MemoryMappedIO Write
        MemoryMappedIO_load = 1'b1;
      end
