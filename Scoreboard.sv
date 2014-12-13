@@ -76,7 +76,7 @@ class Scoreboard;
    task automatic MbxRead();
       if(!reset || tCount > 0) begin
 	 Agt2SB.get(CurT);
-	 $display("@%0d: Scoreboard: Received Transaction %d", $time, CurT.ID());
+	 $display("@%0d: Scoreboard: Received Transaction %0d", $time, CurT.ID());
 	 if(CurT.rst)
 	   reset = 1'b1;
 	 if(CurT.IRQ) begin
@@ -91,7 +91,7 @@ class Scoreboard;
 
    task automatic MbxWrite();
       if(tCount > 0) begin
-	 $display("@%0d: Scoreboard : Sending Transaction %d to Checker", $time, CurT.ID());
+	 $display("@%0d: Scoreboard : Sending Transaction %0d to Checker", $time, CurT.ID());
 	 SB2Chk.put(CurT);
 	 tCount--;
       end

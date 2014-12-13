@@ -16,10 +16,9 @@ class Monitor;
    endfunction // new
 
    task SendToChecker(MemoryTransaction T);
-      $display("@%0d: Monitor Sending Transaction %d to Checker", $time, T.ID());
+      $display("@%0d: Monitor Sending Transaction %0d to Checker", $time, T.ID());
       T.timestamp = $time;
       tCount--;
-      T.id = id++;
       Mon2Chk.put(T);
    endtask // SendToChecker
       
