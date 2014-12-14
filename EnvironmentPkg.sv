@@ -1,11 +1,11 @@
 package EnvironmentPkg;
 
-enum { tbBR, tbADD, tbLD, tbST,
+typedef enum { tbBR, tbADD, tbLD, tbST,
        tbJSR, tbAND, tbLDR, tbSTR,
        tbRTI, tbNOT, tbLDI, tbSTI,
        tbJMP, tbRES, tbLEA, tbTRAP
      } tb_Opcodes; 
-  	
+  	tb_Opcodes opcode_c;
   `define SV_RAND_CHECK(r)\
   do begin \
     if (!(r)) begin\
@@ -24,6 +24,8 @@ enum { tbBR, tbADD, tbLD, tbST,
 `include "Monitor.sv"
 `include "Checker.sv"
 `include "Environment.sv"
+`include "Covergroups.sv"
+
 
 endpackage // EnvironmentPkg
    

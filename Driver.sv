@@ -10,6 +10,7 @@ class Driver;
       MemoryTransaction tr;
 	  Driver_cbs cbs[$];
 	  int mem_tran_num;
+	  logic [3:0] opcode;
 	  vLC3if lc3if;
       function new(input mailbox #(MemoryTransaction) agt2drv, input int mem_tran_num, vLC3if lc3if);
         this.agt2drv = agt2drv;
@@ -31,7 +32,7 @@ class Driver;
 		lc3if.rst <= 1'b0;
 	endtask*/
 	task transmit(MemoryTransaction tr);
-		#1;
+		@lc3if.cb;
 		$display("@%0d: Driver : Driving Transaction %d",$time, tr.ID());
 		if (tr.rst) begin
 			$display("@%0t: Reset!",$time);
@@ -46,6 +47,7 @@ class Driver;
 				@lc3if.cb;
 			end
 			repeat(mem_tran_num) @lc3if.cb;
+			opcode = lc3if.cb.memory_dout[15:12];
 			lc3if.cb.memory_dout <= tr.DataOut;
 			lc3if.cb.MemoryMappedIO_in <= tr.MemoryMappedIO_in;
 			lc3if.cb.MCR <= tr.MCR;

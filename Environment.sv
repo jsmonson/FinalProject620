@@ -9,7 +9,7 @@
     Monitor mon; 
     Scoreboard scb;
     Checker chk;
- 
+	
     mailbox #(MemoryTransaction) gen2agt, agt2drv, agt2scb, scb2chk, mon2chk;
     int count;
     event agt2scbhs, chk2gen;
@@ -43,10 +43,18 @@
           gen.run(count);
           agt.run(count);
           drv.run(count);
-	  mon.run(count);
-	  scb.run(count);
+		  mon.run(count);
+	      scb.run(count);
           chk.run(count);
-	   
+		  cast_opcode(count);
+		  
         join
      endtask  
+	task cast_opcode (input int count);
+		repeat (count) begin
+		  @vlc3if.cb;
+		  $cast(opcode_c,drv.opcode);
+		end
+	endtask
+
   endclass
