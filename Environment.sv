@@ -31,7 +31,7 @@
       agt = new(gen2agt,agt2drv, agt2scb,agt2scbhs);
       drv = new(agt2drv, 3, vlc3if);
       mon = new(mon2chk, vlc3if, clock_period);
-      scb = new(agt2scb, scb2chk);
+      scb = new(agt2scb, scb2chk, chk2gen);
       chk = new(scb2chk, mon2chk, 
 		chk2gen, scb);
        

@@ -26,6 +26,7 @@ class Scoreboard;
 
    bit 	      reset;
    int 	      tCount;
+   event      chk2gen;
    
    MemoryTransaction CurT;
    
@@ -42,7 +43,7 @@ class Scoreboard;
    Ext #(9) Ext9;   
    Ext #(11) Ext11;
     
-   function new (mailbox #(MemoryTransaction) Agt2SBi, mailbox #(MemoryTransaction) SB2Chki);
+   function new (mailbox #(MemoryTransaction) Agt2SBi, mailbox #(MemoryTransaction) SB2Chki, ref event chk2geni);
 
       EOIC = new ();
       EOIC.EndOfInstructionCycle = 1'b1;
@@ -55,7 +56,7 @@ class Scoreboard;
       
       Agt2SB = Agt2SBi;
       SB2Chk = SB2Chki;
-      
+      chk2gen = chk2geni;
       reset_sb();
    endfunction // new
 
@@ -182,6 +183,9 @@ class Scoreboard;
      //Send End Of Instruction Cycle Transaction
      //This tell the Checker to Compare SB and DUT State
      SB2Chk.put(EOIC);
+     //Wait for Checker to Finish Comparing State
+     $display("ScoreBoard Wait for Checker to Comparing State");
+     @chk2gen;
 	
    endtask // Update
 
