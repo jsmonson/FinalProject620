@@ -20,29 +20,37 @@ class Checker;
       
       MemoryTransaction SBTrans;
       MemoryTransaction MonTrans;
-    
+      MemoryTransaction EOICTrans;
+      
       repeat (count) begin
+	 //Block on a Transaction From Scoreboard
 	 SB2Chk.get(SBTrans);
-	 $display("@%0d: Checker : Received from Scoreboard %0d ", $time , SBTrans.ID());
-	 if(SBTrans.EndOfInstructionCycle)
-	   CheckState();
-	 else begin
-	    Mon2Chk.get(MonTrans);
-	    CheckTrans(SBTrans, MonTrans);
-	    $display(" @%0d: Checker : Received from Monitor %0d", $time , MonTrans.ID());
-	 end	 
-	 //Tell the Generator to 
+	 $display("@%0d: Checker : Received Scoreboard Trans. %0d ", $time , SBTrans.ID());
+	 //Block for the Matching Transaction from the Monitor
+	 Mon2Chk.get(MonTrans);
+	 $display(" @%0d: Checker : Received Monitor Trans. %0d", $time , MonTrans.ID());
+	 //Compare the Transactions
+	 CheckTrans(SBTrans, MonTrans);
+	 //Check for the End-ofInstruction Cycle  
+      	 if(SB2Chk.try_get(EOICTrans)) begin
+	    $display(" @%0d: Checker : Received EOIC Trans. %0d", $time , MonTrans.ID());
+	    CheckState();
+	 end
 	 // Generate the Next Transaction
 	 $display("@%0d: Checker : Transaction Complete... Triggering Generator", $time );
-	 -> GenNextTrans;
+	 -> GenNextTrans;	 
       end
    endtask // run2
+    
    task automatic  CheckState();
       string str;
+      $display("@%0d:Checker: Waiting for Driver to get to Fetch0", $time);
+      while($root.top.LC3.CONTROL.state != 0) begin
+	$display("@%0d:Checker Waiting %0dns", $time, `CLK_PERIOD);
+	#(`CLK_PERIOD/2);	 
+	//$display("@%0d:Checker Waited 1 Clock Cycle", $time);
+      end
       $display("@%0d:Checking DUT State against Scoreboard", $time);
-      while($root.top.LC3.CONTROL.state != 0)
-	#`CLK_PERIOD;
-      
       $display("Checking PC");      
       compare16(SB.PC, $root.top.LC3.DATAPATH.PC, "PC");
       $display("Checking Registers");
@@ -53,7 +61,7 @@ class Checker;
       $display("Checking Stack Pointer");
       compare16(SB.SavedUSP, $root.top.LC3.DATAPATH.SavedUSP, "SavedUSP");
       compare16(SB.SavedSSP, $root.top.LC3.DATAPATH.SavedSSP, "SavedSSP");
-      $display("Done Checking DUTS State against Scoreboard");
+      $display("Done Checking DUT's State against Scoreboard");
    endtask // CheckState
 
    function void compare16(bit [15:0] a, bit [15:0] b, string value);

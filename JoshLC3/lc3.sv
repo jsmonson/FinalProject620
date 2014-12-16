@@ -7,7 +7,7 @@ module lc3(clk,
            memory_dout,
            memory_addr, 
            memory_din, 
-           memWE, //R.W in Diagram
+           memWE_out, //R.W in Diagram
 	   memEN, //Distinguish between MIO and MEM
 	   memRDY, // R signal... Tells when Memory Access is complete
 	   
@@ -30,7 +30,7 @@ input logic [15:0] memory_dout;
  
 output logic [15:0] memory_addr; 
 output logic [15:0] memory_din;
-output logic memWE;
+output logic memWE_out;
 output logic memEN;
 input  logic memRDY;
 
@@ -69,6 +69,7 @@ logic selMDR;
 logic flagWE;
 logic enaMDR;
 logic memWEi;
+
    
 logic PRIV;
 logic enaPSR;
@@ -102,7 +103,7 @@ lc3_datapath DATAPATH(clki, rst,
 		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
 		     IRQ, INTP, INTV, INT,
 		     MemoryMappedIO_in, MemoryMappedIO_out, MemoryMappedIO_load,
-                     memory_din, memory_dout, memory_addr, memEN, memWEi);
+                     memory_din, memory_dout, memory_addr, memEN, memWEi, memWE_out);
 
 lc3_control CONTROL( clki, rst, 
                      IR, N, Z, P, PRIV,  

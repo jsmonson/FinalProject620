@@ -13,4 +13,7 @@ add wave -radix hex sim:/top/LC3/DATAPATH/NZP
 add wave -radix hex sim:/top/LC3/DATAPATH/INTP_reg
 add wave -radix hex sim:/top/LC3/DATAPATH/REGFILE
 add wave -radix hex sim:/top/LC3/CONTROL/state
+add wave -radix hex sim:/top/LC3/CONTROL/NextState
+add wave -radix hex sim:/top/LC3/CONTROL/INT
+add wave -radix hex sim:/top/LC3/CONTROL/ldMAR
 add wave -radix hex sim:/EnvironmentPkg::opcode_c

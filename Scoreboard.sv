@@ -106,7 +106,6 @@ class Scoreboard;
       end
    endtask // run
    
-   
    task automatic ReadTransaction(bit [15:0] Address);
       //Read Next Transaction
       $display("@%0d:***SB READ TRANSACTION ***", $time);
@@ -124,6 +123,7 @@ class Scoreboard;
 	 //On MIO Read Enable Should be Low
 	 CurT.en = 1'b0;
       end
+     
       //Pass to Checker
       MbxWrite();    
    endtask // ReadTransaction
@@ -144,7 +144,7 @@ class Scoreboard;
 	 CurT.en = 1'b0;
 	 CurT.we = 1'b0;
       end
-
+     
       MbxWrite();   
    endtask // WriteTransaction
    
@@ -182,6 +182,7 @@ class Scoreboard;
 
      //Send End Of Instruction Cycle Transaction
      //This tell the Checker to Compare SB and DUT State
+     $display("@%0d: Scoreboard: Sending End-of-instruction-cycle Transaction", $time); 
      SB2Chk.put(EOIC);
      //Wait for Checker to Finish Comparing State
      $display("ScoreBoard Wait for Checker to Comparing State");
@@ -190,6 +191,7 @@ class Scoreboard;
    endtask // Update
 
    task automatic incrPC();
+      $display("@%0d:Scoreboard: Incrementing PC to %0d", $time, PC+1);
       PC = PC + 1;
    endtask // incrPC
    
