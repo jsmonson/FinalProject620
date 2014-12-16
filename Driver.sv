@@ -54,7 +54,7 @@ class Driver;
 	endtask*/
 	task transmit(MemoryTransaction tr);
 		@lc3if.cb;
-		$display("@%0d: Driver: Driving Transaction %d",$time, tr.ID());
+		$display("@%0d: Driver: Driving Transaction %0d",$time, tr.ID());
 		if (tr.rst) begin
 			$display("@%0t: Reset!",$time);
 			lc3if.rst <= 1'b1;
