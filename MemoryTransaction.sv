@@ -38,10 +38,10 @@ class MemoryTransaction;
    constraint c_irq { IRQ == 0; };
  
    
-   function MemoryTransaction copy(int id);
+   function MemoryTransaction copy(int i);
 	  copy = new();
 	  copy.timestamp = timestamp;
-          copy.id = id;      
+          copy.id = i;      
 	  copy.EndOfInstructionCycle = EndOfInstructionCycle;
 	  copy.Address = Address;
 	  copy.DataOut = DataOut;
