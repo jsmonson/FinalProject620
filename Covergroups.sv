@@ -79,7 +79,7 @@ class coverClass;
 	reset_coverage r_c;
 	task run();
 		forever begin
-			@$root.top.clk;
+			@$root.top.lc3_if.clk;
 			s_c.sample($root.top.LC3.ldIR);
 			r_c.sample($root.top.lc3_if.rst);
 		end

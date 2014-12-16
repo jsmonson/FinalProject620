@@ -24,7 +24,7 @@ typedef enum { tbBR, tbADD, tbLD, tbST,
 `include "Monitor.sv"
 `include "Checker.sv"
 `include "Environment.sv"
-//`include "Covergroups.sv"
+`include "Covergroups.sv"
 
 
 endpackage // EnvironmentPkg
