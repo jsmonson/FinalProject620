@@ -46,15 +46,10 @@
 		  mon.run(count);
 	      scb.run(count);
           chk.run(count);
-		  cast_opcode(count);
+		  //cast_opcode(count);
 		  
         join
      endtask  
-	task cast_opcode (input int count);
-		repeat (count) begin
-		  @vlc3if.cb;
-		  $cast(opcode_c,drv.opcode);
-		end
-	endtask
+	
 
   endclass
