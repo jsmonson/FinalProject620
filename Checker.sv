@@ -38,13 +38,28 @@ class Checker;
       end
    endtask // run2
    task automatic  CheckState();
-      $display("Add Code to Check State Here!");
+      string str;
+      $display("@%0d:Checking DUT State against Scoreboard", $time);
+      while($root.top.LC3.CONTROL.state != 0)
+	#`CLK_PERIOD;
+      
+      $display("Checking PC");      
+      compare16(SB.PC, $root.top.LC3.DATAPATH.PC, "PC");
+      $display("Checking Registers");
+      foreach (SB.RegFile[i]) begin
+	 str = $sformatf("Regfile[%0d]",i);
+         compare16(SB.RegFile[i], $root.top.LC3.DATAPATH.REGFILE[i], str);
+      end
+      $display("Checking Stack Pointer");
+      compare16(SB.SavedUSP, $root.top.LC3.DATAPATH.SavedUSP, "SavedUSP");
+      compare16(SB.SavedSSP, $root.top.LC3.DATAPATH.SavedSSP, "SavedSSP");
+      $display("Done Checking DUTS State against Scoreboard");
    endtask // CheckState
 
    function void compare16(bit [15:0] a, bit [15:0] b, string value);
       if(a!=b) begin
 	 $display("@%0d: Checker : Bad Compare of %s", $time , value);
-	 $display("Scoreboard: %04x Monitor: %04x", a, b);
+	 $display("Scoreboard: %04x Monitor (or DUT): %04x", a, b);
       	 $finish;
       end
    endfunction // compare16

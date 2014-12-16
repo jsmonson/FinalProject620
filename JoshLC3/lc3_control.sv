@@ -64,7 +64,7 @@ output reg memWE = 1'b0;
 output reg flagWE = 1'b0;
 output reg regWE = 1'b0;
 
-ControlStates CurrentState; 
+ControlStates state; 
 ControlStates NextState;
 wire branch_enable; 
 
@@ -72,9 +72,9 @@ assign  branch_enable = ((N == IR[11]) || (Z == IR[10]) || (P == IR[9])) ? 1'b1 
 
 always @ (posedge clk or posedge rst) begin
  if(rst)
-  CurrentState <= FETCH0; 
+  state <= FETCH0; 
  else  
-  CurrentState <= NextState; 
+  state <= NextState; 
 end
 
 always_comb begin 
@@ -109,7 +109,7 @@ always_comb begin
   SR2 <= 3'b000;
   DR <= 3'b000;
 
-  case (CurrentState)
+  case (state)
     FETCH0: begin
       //MAR<-PC
       enaPC <= 1'b1; ldMAR <= 1'b1;
