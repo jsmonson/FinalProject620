@@ -18,7 +18,7 @@ module top;
 	  .memory_dout(lc3_if.memory_dout),
 	  .memory_addr(lc3_if.memory_addr),
 	  .memory_din(lc3_if.memory_din),
-	  .memWE(lc3_if.memWE),
+	  .memWE_out(lc3_if.memWE),
 	  .memEN(lc3_if.memEN),
 	  .memRDY(lc3_if.memRDY),
 	  .MemoryMappedIO_in(lc3_if.MemoryMappedIO_in),

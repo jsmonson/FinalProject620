@@ -11,10 +11,16 @@ class Test0 extends component;
 	  fork
 		Env.run();
 		cl.run();
+		state_enum_run();
 	  join_any
 
       $display("Test Finished");
       $stop;
    endtask // run_test
-
+	task state_enum_run();// process to display ASCII instruction of processor
+		forever begin
+		  @$root.top.lc3_if.cb;
+		  $cast(opcode_c,Env.drv.opcode);
+		end
+    endtask
 endclass // Test0
