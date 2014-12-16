@@ -8,11 +8,11 @@
 		this.blueprint = new();
     endfunction
     task run(input int count);
-		$display("@%0d: Generator : Blueprint %d",$time, blueprint.ID());
+		//$display("@%0d: Generator : Blueprint %d",$time, blueprint.ID());
         repeat(count) begin
 			`SV_RAND_CHECK(blueprint.randomize());
 			temp = blueprint.copy();
-			$display("@%0d: Generator : Sending Transaction %d",$time, temp.ID());
+			$display("@%0d: Generator : Sending Transaction %0d",$time, temp.ID());
 			gen2agt.put(temp);
 			@chk2gen;
         end

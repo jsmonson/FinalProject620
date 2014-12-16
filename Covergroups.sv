@@ -1,4 +1,4 @@
-covergroup states with function sample(bit ldIR);
+covergroup opcode_coverage with function sample(bit ldIR);
 	option.per_instance = 1;
 	
 	// all states have executed
@@ -54,10 +54,10 @@ covergroup states with function sample(bit ldIR);
 	ret_jmp : coverpoint $root.top.LC3.IR[8:6] iff ($root.top.LC3.IR[15:12] == tbJMP);
 
 	// Branches have been taken for all combinations of NZP flags
-	n_flag: coverpoint $root.top.LC3.N iff ($root.top.LC3.IR[15:12] == tbBR);
-	z_flag: coverpoint $root.top.LC3.Z iff ($root.top.LC3.IR[15:12] == tbBR);
-	p_flag: coverpoint $root.top.LC3.P iff ($root.top.LC3.IR[15:12] == tbBR);
-	nzp_br: coverpoint $root.top.LC3.IR[11:9] iff ($root.top.LC3.IR[15:12] == tbBR);
+	n_flag: coverpoint $root.top.LC3.N iff ($root.top.LC3.IR[15:12] == tbBR) {option.weight = 0;}
+	z_flag: coverpoint $root.top.LC3.Z iff ($root.top.LC3.IR[15:12] == tbBR) {option.weight = 0;}
+	p_flag: coverpoint $root.top.LC3.P iff ($root.top.LC3.IR[15:12] == tbBR) {option.weight = 0;}
+	nzp_br: coverpoint $root.top.LC3.IR[11:9] iff ($root.top.LC3.IR[15:12] == tbBR){option.weight = 0;}
 	
 	n_br: cross n_flag, nzp_br;
 	z_br: cross z_flag, nzp_br;
@@ -65,27 +65,70 @@ covergroup states with function sample(bit ldIR);
 	
 endgroup
 
+covergroup states_coverage with function sample(bit[5:0] state);
+	option.per_instance = 1;
+	
+	states: coverpoint state { ignore_bins nonexistant = {[$root.top.LC3.CONTROL.num_states:63]}; }
+endgroup 
+
 covergroup reset_coverage with function sample(bit rst );
 	option.per_instance = 1;
 	
-	reset: coverpoint $root.top.lc3_if.rst;
-	opcodes: coverpoint $root.top.LC3.IR[15:12];
+	reset: coverpoint rst {option.weight = 0;}
+	opcodes: coverpoint $root.top.LC3.IR[15:12]{option.weight = 0;}
+	states: coverpoint $root.top.LC3.CONTROL.state {option.weight = 0;}
 	// reset has asserted in every opcode
-	reset_all_states: cross reset, opcode_c;
+	reset_in_opcodes: cross reset, opcodes;
+	reset_in_all_states: cross reset, states;
 endgroup 
 
+covergroup interrupt_coverage with function sample(bit INT);
+	option.per_instance = 1;
+	opcodes: coverpoint $root.top.LC3.IR[15:12]{option.weight = 0;}
+	interrupt: coverpoint INT {option.weight = 0;}
+	 
+	interrupt_in_all_states: cross interrupt, opcodes;
+endgroup
+
+covergroup priority_coverage with function sample(bit[2:0] INTP);
+	option.per_instance = 1;
+	interrupt: coverpoint INTP;
+endgroup
+
+covergroup exception_coverage with function sample(bit ldVector);
+	option.per_instance = 1;
+	exception_vectors: coverpoint $root.top.LC3.DATAPATH.VectorMUX iff($root.top.LC3.selVectorMUX > 0); // exception vectors
+endgroup
+
 class coverClass;
-	states s_c;
+	opcode_coverage o_c;
+	states_coverage s_c;
 	reset_coverage r_c;
+	interrupt_coverage i_c;
+	priority_coverage p_c;
+	exception_coverage e_c;
 	function new();
 		s_c = new();
+		o_c = new();
 		r_c = new();
+		i_c = new();
+		p_c = new();
+		e_c = new();
 	endfunction
 	task run();
-		forever begin
-			@$root.top.lc3_if.clk;
-			s_c.sample($root.top.LC3.ldIR);
-			r_c.sample($root.top.lc3_if.rst);
-		end
+		fork 
+			forever begin
+				@$root.top.lc3_if.clk;
+				s_c.sample($root.top.LC3.CONTROL.state);
+				o_c.sample($root.top.LC3.ldIR);
+				i_c.sample($root.top.lc3_if.IRQ);
+				p_c.sample($root.top.lc3_if.INTP);
+				e_c.sample($root.top.LC3.ldVector);
+			end
+			forever begin
+				@$root.top.lc3_if.rst;
+				r_c.sample($root.top.lc3_if.rst);
+			end
+		join
 	endtask
 endclass

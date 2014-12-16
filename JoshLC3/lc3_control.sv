@@ -63,7 +63,7 @@ output logic ldPriv;
 output reg memWE = 1'b0;
 output reg flagWE = 1'b0;
 output reg regWE = 1'b0;
-
+parameter num_states = 52;
 ControlStates state; 
 ControlStates NextState;
 wire branch_enable; 
