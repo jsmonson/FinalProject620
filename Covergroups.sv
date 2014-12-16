@@ -1,4 +1,4 @@
-covergroup states with function sample(bit ldIR);
+covergroup opcode_coverage with function sample(bit ldIR);
 	option.per_instance = 1;
 	
 	// all states have executed
@@ -65,13 +65,21 @@ covergroup states with function sample(bit ldIR);
 	
 endgroup
 
+covergroup states_coverage with function sample(bit[5:0] state);
+	option.per_instance = 1;
+	
+	states: coverpoint state { ignore_bins nonexistant = {[$root.top.LC3.CONTROL.num_states:63]}; }
+endgroup 
+
 covergroup reset_coverage with function sample(bit rst );
 	option.per_instance = 1;
 	
 	reset: coverpoint rst {option.weight = 0;}
 	opcodes: coverpoint $root.top.LC3.IR[15:12]{option.weight = 0;}
+	states: coverpoint $root.top.LC3.CONTROL.state {option.weight = 0;}
 	// reset has asserted in every opcode
-	reset_all_states: cross reset, opcodes;
+	reset_in_opcodes: cross reset, opcodes;
+	reset_in_all_states: cross reset, states;
 endgroup 
 
 covergroup interrupt_coverage with function sample(bit INT);
@@ -93,13 +101,15 @@ covergroup exception_coverage with function sample(bit ldVector);
 endgroup
 
 class coverClass;
-	states s_c;
+	opcode_coverage o_c;
+	states_coverage s_c;
 	reset_coverage r_c;
 	interrupt_coverage i_c;
 	priority_coverage p_c;
 	exception_coverage e_c;
 	function new();
 		s_c = new();
+		o_c = new();
 		r_c = new();
 		i_c = new();
 		p_c = new();
@@ -109,7 +119,8 @@ class coverClass;
 		fork 
 			forever begin
 				@$root.top.lc3_if.clk;
-				s_c.sample($root.top.LC3.ldIR);
+				s_c.sample($root.top.LC3.CONTROL.state);
+				o_c.sample($root.top.LC3.ldIR);
 				i_c.sample($root.top.lc3_if.IRQ);
 				p_c.sample($root.top.lc3_if.INTP);
 				e_c.sample($root.top.LC3.ldVector);
