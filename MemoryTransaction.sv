@@ -44,6 +44,7 @@ class MemoryTransaction;
    
    function MemoryTransaction copy();
 	  copy = new();
+	  copy.timestamp = timestamp;
 	  copy.id = genID();
 	  copy.EndOfInstructionCycle = EndOfInstructionCycle;
 	  copy.Address = Address;
