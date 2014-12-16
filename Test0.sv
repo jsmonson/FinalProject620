@@ -7,7 +7,7 @@ class Test0 extends component;
       $display("Running Basic Test");	
       Env = new(10, 20);
       Env.build();
-	  //cl = new();
+	  cl = new();
 	  fork
 		Env.run();
 		cl.run();
