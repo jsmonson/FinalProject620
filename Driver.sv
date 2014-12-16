@@ -43,10 +43,11 @@ class Driver;
 			lc3if.cb.IRQ <= tr.IRQ;
 			lc3if.cb.INTV <=tr.INTV;
 			lc3if.cb.INTP <= tr.INTP;
-			while (!$root.top.LC3.ldMAR) begin
+			while (!$root.top.LC3.ldMAR && $root.LC3.CONTROL.state != 0) begin // f0
 				@lc3if.cb;
 			end
-			repeat(mem_tran_num) @lc3if.cb;
+			if ($root.top.LC3.ldMAR)
+				repeat(mem_tran_num) @lc3if.cb;
 			opcode = lc3if.cb.memory_dout[15:12];
 			lc3if.cb.memory_dout <= tr.DataOut;
 			lc3if.cb.MemoryMappedIO_in <= tr.MemoryMappedIO_in;
