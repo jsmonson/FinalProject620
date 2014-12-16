@@ -4,6 +4,7 @@ import EnvironmentPkg::*;
 `include "Test0.sv"
  
 program test;
+
    initial begin
       component c;
       factory::printFactory();

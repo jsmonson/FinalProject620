@@ -1,4 +1,4 @@
-covergroup states @(posedge $root.top.LC3.ldIR); //with function sample(bit ldIR);
+covergroup states with function sample(bit ldIR);
 	option.per_instance = 1;
 	
 	// all states have executed
@@ -65,7 +65,7 @@ covergroup states @(posedge $root.top.LC3.ldIR); //with function sample(bit ldIR
 	
 endgroup
 
-covergroup reset_coverage @ (posedge $root.top.lc3_if.rst);//with function sample(bit rst );
+covergroup reset_coverage with function sample(bit rst );
 	option.per_instance = 1;
 	
 	reset: coverpoint $root.top.lc3_if.rst;
@@ -73,10 +73,14 @@ covergroup reset_coverage @ (posedge $root.top.lc3_if.rst);//with function sampl
 	// reset has asserted in every opcode
 	reset_all_states: cross reset, opcode_c;
 endgroup 
-/*
+
 class coverClass;
 	states s_c;
 	reset_coverage r_c;
+	function new();
+		s_c = new();
+		r_c = new();
+	endfunction
 	task run();
 		forever begin
 			@$root.top.lc3_if.clk;
@@ -84,4 +88,4 @@ class coverClass;
 			r_c.sample($root.top.lc3_if.rst);
 		end
 	endtask
-endclass*/
+endclass
