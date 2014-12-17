@@ -95,10 +95,7 @@ class Checker;
 	 compare16(fromScb.MemoryMappedIO_in, fromMon.MemoryMappedIO_in, "MemoryMappedIO_in");
 	 compare16(fromScb.MemoryMappedIO_out, fromMon.MemoryMappedIO_out, "MemoryMappedIO_out");
 	 compare1(fromScb.MemoryMappedIO_load, fromMon.MemoryMappedIO_load, "MemoryMappedIO_load");
-	 compare16(fromScb.MCR, fromMon.MCR, "MCR");
-	 
-	 
-	 
+	 compare16(fromScb.MCR, fromMon.MCR, "MCR");	 
       end
    endtask // CheckTrans
    

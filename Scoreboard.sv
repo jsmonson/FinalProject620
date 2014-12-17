@@ -116,10 +116,7 @@ class Scoreboard;
       CurT.we = 1'b0; //Read Operation
       CurT.en = 1'b1; //Memory Enable
       CurT.MemoryMappedIO_load = 1'b0;
-      if(Address == 16'hFE00 ||
-	 Address == 16'hFE02 ||
-	 Address == 16'hFE04 ||
-	 Address == 16'hFE06) begin
+      if(Address >= 16'hFE00) begin
 	 //On MIO Read Enable Should be Low
 	 CurT.en = 1'b0;
       end
