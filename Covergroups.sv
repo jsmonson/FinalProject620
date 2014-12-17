@@ -86,14 +86,15 @@ endgroup
 covergroup interrupt_coverage with function sample(bit INT);
 	option.per_instance = 1;
 	opcodes: coverpoint $root.top.LC3.IR[15:12]{option.weight = 0;}
-	interrupt: coverpoint INT {option.weight = 0;}
-	 
+	interrupt: coverpoint INT {option.weight = 0; ignore_bins zero = {0};}
 	interrupt_in_all_states: cross interrupt, opcodes;
 endgroup
 
 covergroup priority_coverage with function sample(bit[2:0] INTP);
 	option.per_instance = 1;
-	interrupt: coverpoint INTP;
+	priority_c: coverpoint INTP {option.weight = 0;}
+	interrupt: coverpoint $root.top.lc3_if.IRQ {option.weight = 0; ignore_bins zero = {0};}
+	priority_in_all_interrupts : cross priority_c, interrupt;
 endgroup
 
 covergroup exception_coverage with function sample(bit ldVector);
