@@ -116,9 +116,11 @@ class Scoreboard;
       CurT.we = 1'b0; //Read Operation
       CurT.en = 1'b1; //Memory Enable
       CurT.MemoryMappedIO_load = 1'b0;
+
       if(Address >= 16'hFE00) begin
 	 //On MIO Read Enable Should be Low
 	 CurT.en = 1'b0;
+	 //CurT.DataOut = CurT.MemoryMappedIO_in;
       end
      
       //Pass to Checker
