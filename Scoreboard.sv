@@ -141,7 +141,7 @@ class Scoreboard;
       if(Address >= 16'hFE00) begin
 	 CurT.MemoryMappedIO_load = 1'b1;
 	 CurT.en = 1'b0;
-	 CurT.we = 1'b0;
+	 //CurT.we = 1'b0;
       end
      
       MbxWrite();   

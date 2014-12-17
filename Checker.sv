@@ -87,15 +87,21 @@ class Checker;
 	    $finish;	   
 	 end
       end else begin
+	 compare16(fromScb.MCR, fromMon.MCR, "MCR");
 	 compare16(fromScb.Address, fromMon.Address, "Address");
-	 compare16(fromScb.DataOut, fromMon.DataOut, "DataOut");
-	 compare16(fromScb.DataIn, fromMon.DataIn, "DataIn");
-	 compare1(fromScb.we, fromMon.we, "we");
+	 compare16(fromScb.DataOut, fromMon.DataOut, "DataOut");	 
 	 compare1(fromScb.en, fromMon.en, "en");
+	 compare1(fromScb.we, fromMon.we, "we");	 
+	 //Only Check when Writing to Regular Memory
+	 if(fromScb.en && fromScb.we) begin
+	   compare16(fromScb.DataIn, fromMon.DataIn, "DataIn");
+	 end 
 	 compare16(fromScb.MemoryMappedIO_in, fromMon.MemoryMappedIO_in, "MemoryMappedIO_in");
-	 compare16(fromScb.MemoryMappedIO_out, fromMon.MemoryMappedIO_out, "MemoryMappedIO_out");
 	 compare1(fromScb.MemoryMappedIO_load, fromMon.MemoryMappedIO_load, "MemoryMappedIO_load");
-	 compare16(fromScb.MCR, fromMon.MCR, "MCR");	 
+	 //Only Check when Writing to Memory Mapped IO
+	 if(fromScb.MemoryMappedIO_load) begin
+	    compare16(fromScb.MemoryMappedIO_out, fromMon.MemoryMappedIO_out, "MemoryMappedIO_out");    
+	 end	 
       end
    endtask // CheckTrans
    
