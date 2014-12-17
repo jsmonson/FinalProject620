@@ -14,7 +14,7 @@ endclass // Extension
 class Scoreboard;
 
    //LC3 State
-   bit [15:0] RegFile[7];
+   bit [15:0] RegFile[8];
    bit [15:0] PC;
    bit [15:0] PSR;
    bit [15:0] SavedUSP;
@@ -209,6 +209,10 @@ class Scoreboard;
       $display("@%0d: SB INSTRUCTION: %s, op1: %04x, op2 %04x", $time, label, op1, op2, op3);
    endfunction // PrintInstr
    
+   function automatic void PrintRegFile();
+		foreach(RegFile[i])
+			$display("@%0d:  Reg[%0d]: %01x", $time, i, RegFile[i]);
+   endfunction
    
    task automatic LC3_ADD();
                 
@@ -251,6 +255,7 @@ class Scoreboard;
    
    task automatic LC3_JMP();
       //This also covers RET
+	  PrintRegFile();
       PrintInstr("JMP", CurT.BaseR(), 16'bx, 16'bx);
       PC = RegFile[CurT.BaseR()];
    endtask // LC3_JMP
