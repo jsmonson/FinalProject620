@@ -102,6 +102,16 @@ covergroup exception_coverage with function sample(bit ldVector);
 	exception_vectors: coverpoint $root.top.LC3.DATAPATH.VectorMUX iff($root.top.LC3.selVectorMUX > 0); // exception vectors
 endgroup
 
+covergroup address_coverage with function sample(bit ldMAR);
+	option.per_instance = 1;
+	address_ranges: coverpoint $root.top.LC3.DATAPATH.MAR{ 
+		bins Trap = {[16'h0000:16'h00FF]};
+		bins Interrupt = {[16'h0100:16'h01FF]};
+		bins User = {[16'h3000:16'hFE00]};
+		bins MMAPIO = {[16'hFE00:16'hFFFF]};
+	} 
+endgroup
+
 class coverClass;
 	opcode_coverage o_c;
 	states_coverage s_c;
@@ -109,6 +119,7 @@ class coverClass;
 	interrupt_coverage i_c;
 	priority_coverage p_c;
 	exception_coverage e_c;
+	address_coverage a_c;
 	function new();
 		s_c = new();
 		o_c = new();
@@ -116,6 +127,7 @@ class coverClass;
 		i_c = new();
 		p_c = new();
 		e_c = new();
+		a_c = new();
 	endfunction
 	task run();
 		fork 
@@ -126,6 +138,7 @@ class coverClass;
 				i_c.sample($root.top.lc3_if.IRQ);
 				p_c.sample($root.top.lc3_if.INTP);
 				e_c.sample($root.top.LC3.ldVector);
+				a_c.sample($root.top.LC3.ldMAR);
 			end
 			forever begin
 				@$root.top.lc3_if.rst;
