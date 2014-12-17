@@ -88,7 +88,7 @@ logic [2:0] NZP;
 logic [2:0] INTP_reg;
 
 logic N, Z, P;
-logic [15:0] REGFILE [0:7];
+logic [15:0] REGFILE [8];
 
 //logic [15:0] MEMORY [0:255];
 
@@ -219,17 +219,17 @@ always_ff @ (posedge clk iff rst==0 or posedge rst) begin
       SavedSSP <= 16'd0;
    end else begin
       if(ldSavedUSP)
-	SavedUSP <= SR1;
+	SavedUSP <= REGFILE[SR1];
       if(ldSavedSSP)
-	SavedSSP <= SR1;   
+	SavedSSP <= REGFILE[SR1];   
    end
 end
    
 always_comb begin
    unique case (selSPMUX)
      2'b00: SPMUX = SavedSSP;
-     2'b01: SPMUX = SR1 - 1;
-     2'b10: SPMUX = SR1 + 1;
+     2'b01: SPMUX = REGFILE[SR1] - 1;
+     2'b10: SPMUX = REGFILE[SR1] + 1;
      2'b11: SPMUX = SavedUSP;
    endcase // unique case (selSPMUX)
 end      

@@ -13,6 +13,8 @@ add wave -radix hex sim:/top/LC3/DATAPATH/SavedSSP
 add wave -radix hex sim:/top/LC3/DATAPATH/NZP 
 add wave -radix hex sim:/top/LC3/DATAPATH/INTP_reg
 add wave -radix hex sim:/top/LC3/DATAPATH/REGFILE
+add wave -radix hex sim:/top/LC3/DATAPATH/VectorMUX
+add wave -radix hex sim:/top/LC3/DATAPATH/INTV
 add wave -radix hex sim:/top/LC3/CONTROL/state
 add wave -radix hex sim:/top/LC3/CONTROL/NextState
 add wave -radix hex sim:/top/LC3/CONTROL/INT

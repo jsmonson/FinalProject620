@@ -46,7 +46,7 @@ class Checker;
       string str;
       $display("@%0d:Checker: Waiting for Driver to get to Fetch0", $time);
       while($root.top.LC3.CONTROL.state != 0) begin
-	$display("@%0d:Checker Waiting %0dns", $time, `CLK_PERIOD);
+	$display("@%0d:Checker Waiting %0dns", $time, `CLK_PERIOD/2);
 	#(`CLK_PERIOD/2);	 
 	//$display("@%0d:Checker Waited 1 Clock Cycle", $time);
       end
@@ -81,6 +81,7 @@ class Checker;
    endfunction // compare16
   
    task automatic CheckTrans(MemoryTransaction fromScb, MemoryTransaction fromMon);
+      $display("@%0d: Checker: Comparing Transaction %0d", $time, fromScb.id);
       if(fromScb.rst == 1'b1 || fromMon.rst == 1'b1) begin
 	 if(fromScb.rst != fromMon.rst) begin
 	    $display("@%0d: Checker : Reset Mismatch : Transaction Timestamp: %0d", $time, fromMon.timestamp);

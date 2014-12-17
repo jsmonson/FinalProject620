@@ -152,7 +152,7 @@ always_comb begin
         LDI: NextState <= LDI0;    //**//
         STI: NextState <= STI0; //**// 
         JMP: NextState <= JMP0;   //**//
-        RES: NextState <=  FETCH0; 
+        RES: NextState <=  RES0; 
         LEA:  NextState <= LEA0;  //**//
         TRAP: NextState <= TRAP0; //**//
        endcase
@@ -365,7 +365,8 @@ always_comb begin
      DR <= IR[11:9]; 
      regWE <= 1'b1; 
      enaMDR <= 1'b1;
-     ldCC<=1'b1;  
+     ldCC<=1'b1;
+     selPSRMUX <= 1'b1;
      NextState <= FETCH0;
     end
         
@@ -396,6 +397,7 @@ always_comb begin
      SR1 <= IR[8:6]; 
      DR <= IR[11:9]; 
      regWE <= 1'b1;
+     selPSRMUX <= 1'b1;
      ldCC <= 1'b1;  
      NextState <= FETCH0;
     end 
@@ -407,7 +409,8 @@ always_comb begin
      DR <= IR[11:9]; 
      regWE <= 1'b1;  
      flagWE <= 1'b1;
-     ldCC <= 1'b1;    
+     ldCC <= 1'b1;
+     selPSRMUX <= 1'b1;    
      NextState <= FETCH0;
     end
     AND0: begin 
@@ -417,6 +420,7 @@ always_comb begin
      SR2 <= IR[2:0];  
      DR <= IR[11:9]; 
      regWE <= 1'b1;
+     selPSRMUX <= 1'b1;
      ldCC <= 1'b1;
      NextState <= FETCH0;
     end
@@ -571,6 +575,7 @@ always_comb begin
 
    INT3: begin
      if(memRDY) begin
+	selMDR <= 1'b1;
 	memWE <= 1'b1;
 	NextState <= INT4;
      end
@@ -596,6 +601,7 @@ always_comb begin
 
    INT6: begin
      if(memRDY) begin
+       selMDR <= 1'b1;
        memWE <= 1'b1;
        NextState <= INT4;
      end

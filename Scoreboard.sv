@@ -108,9 +108,11 @@ class Scoreboard;
    
    task automatic ReadTransaction(bit [15:0] Address);
       //Read Next Transaction
-      $display("@%0d:***SB READ TRANSACTION ***", $time);
+      $display("@%0d***SB Blocking for READ TRANSACTION ***",$time);
       MbxRead();     
-      $display("@%0d:CurT.DataOut=%04h", $time, CurT.DataOut);      
+      $display("@%0d:***SB READ TRANSACTION ***", $time);
+      $display("@%0d:CurT.DataOut=%04h", $time, CurT.DataOut);  
+      $display("@%0d:CurT.Address=%04h", $time, CurT.Address);      
       $display("@%0d:CurT.MMIO_load=%d", $time, CurT.MemoryMappedIO_load);      
       CurT.Address = Address;
       CurT.we = 1'b0; //Read Operation
@@ -128,9 +130,13 @@ class Scoreboard;
    endtask // ReadTransaction
 
    task automatic WriteTransaction(bit [15:0] Address, bit [15:0] Data);
-      $display("@%0d***SB WRITE TRANSACTION ***",$time);
+      $display("@%0d***SB Blocking for WRITE TRANSACTION ***",$time);
       MbxRead();
-      
+      $display("@%0d***SB WRITE TRANSACTION ***",$time);
+      $display("@%0d:CurT.DataOut=%04h", $time, CurT.DataOut);  
+      $display("@%0d:CurT.Address=%04h", $time, CurT.Address);      
+      $display("@%0d:CurT.MMIO_load=%d", $time, CurT.MemoryMappedIO_load);
+     $display("@%0d:Write Data=%04h", $time, Data); 
       CurT.Address = Address;
       CurT.DataIn = Data;     
       CurT.we = 1'b1;
@@ -170,7 +176,10 @@ class Scoreboard;
 	  tbLDI: LC3_LDI();
 	  tbSTI: LC3_STI();
 	  tbJMP: LC3_JMP();
-	  tbRES: InvalidInstructionException();
+	  tbRES: begin
+	     PrintInstr("RES", PSR, 16'bx, 16'bx);
+	     InvalidInstructionException();
+	  end
 	  tbLEA: LC3_LEA();
 	  tbTRAP: LC3_TRAP();
       endcase // case (I.Opcode)
