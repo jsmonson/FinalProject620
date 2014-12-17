@@ -36,6 +36,8 @@ class Monitor;
 	    SendToChecker(toSend);
 	 end else if (lc3if.memRDY) begin
 	    toSend = new ();
+	    toSend.id = id++;
+	    
 	    toSend.MCR = lc3if.MCR;
 	    toSend.Address = lc3if.memory_addr;
             toSend.DataOut = lc3if.memory_dout;

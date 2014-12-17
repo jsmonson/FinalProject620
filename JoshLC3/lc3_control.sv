@@ -68,7 +68,7 @@ ControlStates state;
 ControlStates NextState;
 wire branch_enable; 
 
-assign  branch_enable = ((N == IR[11]) || (Z == IR[10]) || (P == IR[9])) ? 1'b1 : 1'b0; 
+assign  branch_enable = ((N && IR[11]) || (Z && IR[10]) || (P && IR[9])) ? 1'b1 : 1'b0; 
 
 always @ (posedge clk or posedge rst) begin
  if(rst)
@@ -386,6 +386,7 @@ always_comb begin
        DR <= IR[11:9];
        regWE <= 1'b1;
        ldCC <= 1'b1;
+       selPSRMUX <= 1'b1;
        NextState <= FETCH0;
     end
     
@@ -451,6 +452,7 @@ always_comb begin
       selEAB1 <= 1'b1;
       selEAB2 <= 2'b01;
       selMAR <= 1'b0;
+      SR1 <= IR[8:6]; 
       enaMARM <= 1'b1;
       ldMAR <= 1'b1;
       NextState <= ST1;

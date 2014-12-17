@@ -259,11 +259,11 @@ class Scoreboard;
    task automatic LC3_JSR();
   
       RegFile[7] = PC;
-      if(CurT.DataOut[11]==1) begin
-	PC = CurT.BaseR();
-	PrintInstr("JSR", CurT.PCoffset11(), 16'bx, 16'bx);
-      end else begin
+      if(CurT.DataOut[11]==0) begin
+	PC = RegFile[CurT.BaseR()];
 	PrintInstr("JSRR", CurT.BaseR(), 16'bx, 16'bx);
+      end else begin
+	PrintInstr("JSR", PC, CurT.PCoffset11(), 16'bx);
 	PC = PC + Ext11.SEXT(CurT.PCoffset11());
       end
    endtask // LC3_JSR
@@ -284,7 +284,7 @@ class Scoreboard;
 
    task automatic LC3_LDR();
       PrintInstr("LDR", CurT.DR(), CurT.BaseR(), CurT.offset6());
-      ReadTransaction(CurT.BaseR()+Ext6.SEXT(CurT.offset6));
+      ReadTransaction(RegFile[CurT.BaseR()]+Ext6.SEXT(CurT.offset6));
       RegFile[CurT.DR()] = CurT.DataOut;
       setcc(CurT.DataOut);
    endtask // LC3_LDR
@@ -313,8 +313,8 @@ class Scoreboard;
    endtask // LC3_STI
 
    task automatic LC3_STR();
-      PrintInstr("STR", CurT.BaseR(), CurT.offset6(), 16'bx);
-      WriteTransaction(CurT.BaseR() + Ext6.SEXT(CurT.offset6), RegFile[CurT.SR()]);
+      PrintInstr("STR", CurT.SR(), CurT.BaseR(), CurT.offset6());
+      WriteTransaction(RegFile[CurT.BaseR()] + Ext6.SEXT(CurT.offset6()), RegFile[CurT.SR()]);
    endtask // LC3_STR
 
    task automatic LC3_TRAP();
