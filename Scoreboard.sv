@@ -255,7 +255,6 @@ class Scoreboard;
    
    task automatic LC3_JMP();
       //This also covers RET
-	  PrintRegFile();
       PrintInstr("JMP", CurT.BaseR(), 16'bx, 16'bx);
       PC = RegFile[CurT.BaseR()];
    endtask // LC3_JMP
