@@ -320,8 +320,8 @@ class Scoreboard;
    endtask // LC3_LDR
 
    task automatic LC3_NOT();
-      PrintInstr("NOT", CurT.DR(), CurT.SR(), 16'bx);
-      RegFile[CurT.DR()] = ~RegFile[CurT.SR()];
+      PrintInstr("NOT", CurT.DR(), CurT.SR1(), 16'bx);
+      RegFile[CurT.DR()] = ~RegFile[CurT.SR1()];
       setcc(RegFile[CurT.DR()]);
    endtask // LC3_NOT
 

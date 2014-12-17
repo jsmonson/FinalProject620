@@ -84,7 +84,7 @@ class MemoryTransaction;
    endfunction // SR2
 
    function bit [2:0] SR();
-      return DataOut[8:6];
+      return DataOut[11:9];
    endfunction // SR
 
    function bit [2:0] BaseR();
