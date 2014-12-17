@@ -74,11 +74,12 @@ endgroup
 covergroup reset_coverage with function sample(bit rst );
 	option.per_instance = 1;
 	
-	reset: coverpoint rst {option.weight = 0;}
+	reset: coverpoint rst {ignore_bins zero = {0};}
 	opcodes: coverpoint $root.top.LC3.IR[15:12]{option.weight = 0;}
 	states: coverpoint $root.top.LC3.CONTROL.state {option.weight = 0;}
 	// reset has asserted in every opcode
 	reset_in_opcodes: cross reset, opcodes;
+	// reset has asserted in every state
 	reset_in_all_states: cross reset, states;
 endgroup 
 
