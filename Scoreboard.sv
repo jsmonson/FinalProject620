@@ -206,7 +206,7 @@ class Scoreboard;
    endtask // Update
 
    task automatic incrPC();
-      $display("@%0d:Scoreboard: Incrementing PC to %0d", $time, PC+1);
+      $display("@%0d:Scoreboard: Incrementing PC to %0x", $time, PC+1);
       PC = PC + 1;
    endtask // incrPC
    
