@@ -65,7 +65,8 @@ class Driver;
 			lc3if.cb.IRQ <= tr.IRQ;
 			lc3if.cb.INTV <=tr.INTV;
 			lc3if.cb.INTP <= tr.INTP;
-			opcode = lc3if.memory_dout[15:12];
+			if ($root.top.LC3.ldIR)
+				opcode = lc3if.memory_dout[15:12];
 			lc3if.cb.memory_dout <= tr.DataOut;
 			lc3if.cb.MemoryMappedIO_in <= tr.MemoryMappedIO_in;
 			lc3if.cb.MCR <= tr.MCR;
