@@ -267,25 +267,27 @@ class Scoreboard;
       end
    endtask // LC3_JSR
 
-   task automatic LOAD_MEM(bit [15:0] addr);
+   task automatic LOAD_MEM(bit [2:0] dr, bit [15:0] addr);
       if(addr >= 16'hFE00) begin
-	 RegFile[CurT.DR()] = CurT.MemoryMappedIO_in;
+	 RegFile[dr] = CurT.MemoryMappedIO_in;
 	 setcc(CurT.MemoryMappedIO_in);
       end else begin
-	RegFile[CurT.DR()] = CurT.DataOut;
+	RegFile[dr] = CurT.DataOut;
 	setcc(CurT.DataOut); 
       end
    endtask // LOAD_MEM
    
    task automatic LC3_LD();
       bit [15:0] ldaddr = PC + Ext9.SEXT(CurT.PCoffset9());
-      PrintInstr("LD", CurT.DR(), CurT.PCoffset9(), 16'bx);
+      bit [2:0]  DR = CurT.DR();
+      PrintInstr("LD", DR, CurT.PCoffset9(), 16'bx);
       ReadTransaction(ldaddr);
-      LOAD_MEM(ldaddr);
+      LOAD_MEM(DR, ldaddr);
    endtask // LC3_LD
 
    task automatic LC3_LDI();
       bit [15:0] addri = PC + Ext9.SEXT(CurT.PCoffset9());
+      bit [2:0]  DR = CurT.DR();
       PrintInstr("LDI", CurT.DR(), CurT.PCoffset9(), 16'bx);
       ReadTransaction(addri);
       if(addri >= 16'hfe00) begin
@@ -296,14 +298,15 @@ class Scoreboard;
 	 ReadTransaction(addri);
       end
       $display("@%0d: LDI: Indirect Address %04h", $time, addri);
-      LOAD_MEM(addri);
+      LOAD_MEM(DR, addri);
    endtask // LC3_LDI
 
    task automatic LC3_LDR();
       bit [15:0] addr = RegFile[CurT.BaseR()]+Ext6.SEXT(CurT.offset6);
+      bit [2:0]  DR = CurT.DR();
       PrintInstr("LDR", CurT.DR(), CurT.BaseR(), CurT.offset6());
       ReadTransaction(addr);
-      LOAD_MEM(addr);
+      LOAD_MEM(DR, addr);
    endtask // LC3_LDR
 
    task automatic LC3_LEA();
