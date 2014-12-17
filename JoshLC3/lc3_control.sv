@@ -565,7 +565,7 @@ always_comb begin
    INT2: begin
      //MAR,SP<=SP-1
      SR1 <= 3'b110;
-     DR <= 1'b1;
+     DR <= 3'b110;
      selSPMUX <= 2'b01;
      enaSP <= 1'b1;
      regWE <= 1'b1;
@@ -584,26 +584,26 @@ always_comb begin
    INT4: begin
      enaPCM1 <= 1'b1;
      ldMDR <= 1'b1;
-     selMDR <= 1'b1;
+     selMDR <= 1'b0;
      NextState <= INT5;
    end
         
    INT5: begin
      //MAR,SP<=SP-1
      SR1 <= 3'b110;
-     DR <= 1'b1;
+     DR <= 3'b110;
      selSPMUX <= 2'b01;
      enaSP <= 1'b1;
      regWE <= 1'b1;
      ldMAR <= 1'b1;
-     NextState <= INT3;
+     NextState <= INT6;
    end
 
    INT6: begin
      if(memRDY) begin
        selMDR <= 1'b1;
        memWE <= 1'b1;
-       NextState <= INT4;
+       NextState <= INT7;
      end
    end
 

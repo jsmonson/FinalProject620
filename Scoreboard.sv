@@ -155,13 +155,20 @@ class Scoreboard;
    
    
    task automatic UpdateSB();
-          
+     bit [3:0] opcode;
+     
      if(INT) begin
 	incrPC();
 	Interrupt();
      end else begin
 	ReadTransaction(PC);
 	incrPC();
+	
+	if(PC >= 16'hfe00)
+	  opcode = CurT.MemoryMappedIO_in[15:12];
+	else
+	  opcode = CurT.Opcode; 
+	       
 	case (CurT.Opcode) 
 	  tbBR: LC3_BR();
           tbADD: LC3_ADD();
