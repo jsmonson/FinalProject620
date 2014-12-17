@@ -86,7 +86,8 @@ logic [15:0] SavedUSP;
 logic [15:0] SavedSSP;
 logic [2:0] NZP; 
 logic [2:0] INTP_reg;
-
+logic [15:0] Vector;
+   
 logic N, Z, P;
 logic [15:0] REGFILE [8];
 
@@ -246,7 +247,14 @@ end
        default: $display("Vector ERROR: Illegal Select Signal ");
      endcase // unique case (selVectorMUX)
   end
-   
+
+  always_ff @ (posedge clk iff rst==0 or posedge rst) begin
+     if(rst) begin
+	Vector <= 16'd0;
+     end else if(ldVector) begin
+	Vector <= VectorMUX;
+     end
+  end
       
 /************************************
  MAR 
@@ -440,7 +448,7 @@ assign BUSS = (enaMDR) ? MDR : 16'hZZZZ;
 assign BUSS = (enaPSR) ? PSR : 16'hZZZZ;
 assign BUSS = (enaPCM1) ? PC_MINUS_1 : 16'hZZZZ;
 assign BUSS = (enaSP) ? SPMUX : 16'hZZZZ;
-assign BUSS = (enaVector) ? VectorMUX : 16'hZZZZ;
+assign BUSS = (enaVector) ? Vector : 16'hZZZZ;
   
 
 endmodule

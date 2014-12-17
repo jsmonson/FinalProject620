@@ -1,6 +1,6 @@
 class MemoryTransaction;
    time timestamp; //Monitor will fill in this value
-
+   
    // ID members
    int id;
 
@@ -64,63 +64,105 @@ class MemoryTransaction;
    function int ID();
       return id;
    endfunction    
-   
-     
+      
    //Instruction Helper Functions   
    function bit [3:0] Opcode();
-      return DataOut[15:12];
+      if(Address>=16'hfe00)
+	return MemoryMappedIO_in[15:12];
+      else
+	return DataOut[15:12];
    endfunction // Opcode
 
    function bit [2:0] DR();
-      return DataOut[11:9];
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[11:9];
+      else
+	return DataOut[11:9];
    endfunction // DR
 
    function bit [2:0] SR1();
-      return DataOut[8:6];
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[8:6];
+      else
+	return DataOut[8:6];
    endfunction // SR1
 
    function bit [2:0] SR2();
-      return DataOut[2:0];
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[2:0];
+      else
+	return DataOut[2:0];
    endfunction // SR2
 
    function bit [2:0] SR();
-      return DataOut[11:9];
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[11:9];
+      else
+	return DataOut[11:9];
    endfunction // SR
 
    function bit [2:0] BaseR();
-      return DataOut[8:6];
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[8:6];
+      else
+	return DataOut[8:6];
    endfunction // BaseR
 
    function bit [4:0] imm5();
-      return DataOut[4:0];
+      if(Address>=16'hfe00)
+	return MemoryMappedIO_in[4:0];
+      else
+	return DataOut[4:0];
    endfunction // imm5
 
    function bit [5:0] offset6();
-      return DataOut[5:0];
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[5:0];
+      else
+	return DataOut[5:0];
    endfunction // offset6
 
    function bit [7:0] trapvect8();
-      return DataOut[7:0];
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[7:0];
+      else
+	return DataOut[7:0];
    endfunction // trapvect8
 
-   function bit [8:0] PCoffset9();
-      return DataOut[8:0];
+   function bit [8:0] PCoffset9(); 
+      if(Address>=16'hfe00)
+	return MemoryMappedIO_in[8:0];
+      else
+	return DataOut[8:0];
    endfunction // PCoffset9
 
-   function bit [10:0] PCoffset11();
-      return DataOut[10:0];
+   function bit [10:0] PCoffset11(); 
+      if(Address>=16'hfe00)
+	return MemoryMappedIO_in[10:0];
+      else
+	return DataOut[10:0];    
    endfunction // PCoffset11
       
-   function bit  n();
-      return DataOut[11];
+   function bit  n(); 
+      if(Address>=16'hfe00)
+	return MemoryMappedIO_in[11];
+      else
+	return DataOut[11];
    endfunction // n
 
-   function bit z();
-      return DataOut[10];
+   function bit z(); 
+      if(Address>=16'hfe00)
+	return MemoryMappedIO_in[10];
+      else
+	return DataOut[10];
    endfunction // z
 
-   function bit p();
-      return DataOut[9];
+   function bit p(); 
+      if(Address>=16'hfe00)
+	return MemoryMappedIO_in[9];
+      else
+	return DataOut[9];
    endfunction // p
 
 endclass // MemoryTransaction
+

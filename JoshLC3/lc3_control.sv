@@ -270,7 +270,7 @@ always_comb begin
     RES0: begin
         //RTI Priviledge Exception
        //Vector<-x00
-       selVectorMUX <= 2'b01;
+       selVectorMUX <= 2'b10;
        ldVector <= 1'b1;
        //MDR<-PSR
        selMDR <= 1'b0;
