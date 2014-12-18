@@ -107,6 +107,7 @@ covergroup exception_coverage with function sample(bit ldVector);
 		bins privilege_mode = {0};
 		bins illegal_opcode = {1};
 	} // exception vectors
+	psr_15 : coverpoint $root.top.LC3.PSR_15 iff (ldVector);
 endgroup
 
 covergroup address_coverage with function sample(bit ldMAR);
