@@ -168,15 +168,18 @@ always_comb begin
     end
         
     RTI0: begin
-      //MAR <- SP
-      SR1 <= 3'b110;
-      aluControl <= 2'b00;
-      enaALU <= 1'b1;
-      ldMAR <= 1'b1;
-      if(PRIV)
+      
+      
+      if(PRIV) 
 	NextState <= RTI1;
-      else
+      else begin
+	//MAR <- SP
+	SR1 <= 3'b110;
+	aluControl <= 2'b00;
+	enaALU <= 1'b1; 
+        ldMAR <= 1'b1; 
 	NextState <= RTI2;
+      end
     end 
     
     RTI1: begin
@@ -549,7 +552,8 @@ always_comb begin
      ldPriority <= 1'b1;
      //PSR[15] <- 0
      SetPriv <= 1'b0;
-
+     ldPriv <= 1'b1;
+      
      if(PRIV)
        NextState <= INT1;
      else

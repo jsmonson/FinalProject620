@@ -408,7 +408,7 @@ class Scoreboard;
    task automatic LC3_RTI();
       
       bit [15:0] TEMP;
-      PrintInstr("RTI", 16'bx, 16'bx, 16'bx);
+      PrintInstr("RTI", PSR, 16'bx, 16'bx);
       if(PSR[15] == 0) begin
 	 ReadTransaction(RegFile[6]);
 	 
@@ -429,11 +429,11 @@ class Scoreboard;
 	 PSR[2:0] = TEMP[2:0];
 	 PSR[10:8] = TEMP[10:8];
 	 PSR[15] = TEMP[15];
-		if (INTP > PSR[10:8]) begin
-			INT = 1;
-		end
-		if (PSR[15])
-			SaveSSPLoadUSP();
+	 if (INTP > PSR[10:8]) begin
+	    INT = 1;
+	 end
+	 if (PSR[15])
+	   SaveSSPLoadUSP();
 			
       end else
 	 PriveledgeModeException();
@@ -464,7 +464,7 @@ class Scoreboard;
    
    task automatic SavePSRAndPCLoadVector(bit [15:0] Vector);
       //Decrement SSP
-	//  $display("%0t : REg 6 = %X",$time, RegFile[6]);
+      $display("%0t : REg 6 = %X",$time, RegFile[6]);
       RegFile[6] = RegFile[6] - 1;
       //Put the PSR on the Supervisor Stack
 	  //$display("%0t : REg 6 = %X",$time, RegFile[6]);
@@ -483,6 +483,7 @@ class Scoreboard;
       
    task automatic Interrupt();
       bit [2:0] TEMP;
+      $display("@%0d: Scoreboard: in interrupt", $time);
       if(PSR[15] == 1'b1) begin
 	 SaveUSPLoadSSP();
       end

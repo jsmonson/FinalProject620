@@ -61,6 +61,8 @@ class Checker;
       $display("Checking Stack Pointer");
       compare16(SB.SavedUSP, $root.top.LC3.DATAPATH.SavedUSP, "SavedUSP");
       compare16(SB.SavedSSP, $root.top.LC3.DATAPATH.SavedSSP, "SavedSSP");
+      compare16(SB.PSR, $root.top.LC3.DATAPATH.PSR, "PSR");
+      
       $display("Done Checking DUT's State against Scoreboard");
    endtask // CheckState
 
