@@ -65,6 +65,7 @@ class Driver;
 			lc3if.rst <= 1'b1;
 			repeat(tr.reset_cycles) @lc3if.cb;
 			lc3if.rst <= 1'b0;
+			first_transaction_happened = 0;
 		end
 		else begin
 			repeat(mem_tran_num) @lc3if.cb;
