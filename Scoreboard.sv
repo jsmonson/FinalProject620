@@ -165,7 +165,7 @@ class Scoreboard;
      bit      reset_tmp;
       if(INTP > PSR[10:8]) begin
 	       INT = 1'b1;  
-		   $display("INT Detected");
+		   $display("%0t, INT Detected",$time);
 	    end
      if(INT) begin
 	incrPC();
@@ -433,7 +433,7 @@ $display("INTV %X INTP %X PSR %X", INTV, INTP, PSR);
 	 PSR[15] = TEMP[15];
 		if (INTP > PSR[10:8]) begin
 			INT = 1;
-			$display("INT in RTI");
+			$display("%0t INT in RTI", $time);
 		end
 		if (PSR[15])
 			SaveSSPLoadUSP();
