@@ -349,9 +349,12 @@ class Scoreboard;
    endtask // LC3_ST
 
    task automatic LC3_STI();
+		bit [2:0] SR_temp;
       PrintInstr("STI", CurT.SR(),CurT.PCoffset9(), 16'bx);
+	  
+	  SR_temp = CurT.SR();
       ReadTransaction(PC + Ext9.SEXT(CurT.PCoffset9()));
-      WriteTransaction(CurT.DataOut, RegFile[CurT.SR()]);
+      WriteTransaction(CurT.DataOut, RegFile[SR_temp]); // CurT.SR() has now changed thanks to the previous transaction
    endtask // LC3_STI
 
    task automatic LC3_STR();
