@@ -32,7 +32,8 @@ class Monitor;
 	    while(lc3if.rst) #1;
 	    //Create a Reset Transaction and Send it.
 	    toSend = new ();
-	    toSend.rst = 1'b1;	    
+	    toSend.rst = 1'b1;
+	    toSend.id = id++;
 	    SendToChecker(toSend);
 	 end else if (lc3if.memRDY) begin
 	    toSend = new ();
