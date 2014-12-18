@@ -12,6 +12,7 @@ class Driver;
       MemoryTransaction tr;
 	  Driver_cbs cbs[$];
 	  int mem_tran_num;
+	  int isInstruction = 0;
 	  logic [3:0] opcode;
 	  event chk2gen;
 	  vLC3if lc3if;
@@ -32,14 +33,18 @@ class Driver;
 			end
 		       //$display("@%0d: Driver: DUT Current State: %0d ldMAR=%0d", $time, $root.top.LC3.CONTROL.state,$root.top.LC3.ldMAR);
 		       if(!$root.top.LC3.CONTROL.state && first_transaction_happened) begin
-			  $display("@%0d:DRIVER: In FETCH0, waiting for Checker to Synchronize",$time);
-			  @(chk2gen);
-		     
+				$display("@%0d:DRIVER: In FETCH0, waiting for Checker to Synchronize",$time);
+				@(chk2gen);
+				isInstruction = 1;
 			  $display("@%0d:DRIVER: Received chk2gen", $time);
 		       end 
 		       
 		       if ($root.top.LC3.ldMAR) begin
 			   agt2drv.get(tr);
+					if (isInstruction) begin
+						opcode = tr.Opcode;	
+						isInstruction = 0;
+					end
 			   foreach(cbs[i]) cbs[i].pre_tx(tr); // callbacks
 			   first_transaction_happened = 1;
 		      	   transmit(tr);
@@ -64,9 +69,7 @@ class Driver;
 			repeat(mem_tran_num) @lc3if.cb;
 			lc3if.cb.IRQ <= tr.IRQ;
 			lc3if.cb.INTV <=tr.INTV;
-			lc3if.cb.INTP <= tr.INTP;
-			if ($root.top.LC3.ldIR)
-				opcode = lc3if.memory_dout[15:12];
+			lc3if.cb.INTP <= tr.INTP;			
 			lc3if.cb.memory_dout <= tr.DataOut;
 			lc3if.cb.MemoryMappedIO_in <= tr.MemoryMappedIO_in;
 			lc3if.cb.MCR <= tr.MCR;
