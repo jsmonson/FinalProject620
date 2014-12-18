@@ -1,15 +1,28 @@
-class Test0 extends component;
+class Test1 extends component;
 
-   typedef registry #(Test0, "Test0") type_id;
+   typedef registry #(Test1, "Test1") type_id;
    Environment Env;
    coverClass cl;
+	class BadMemTr extends MemoryTransaction;
+	   constraint d_out {
+			(DataOut[15:12] == 4'b1000);
+	   }
+	   constraint c_mcr { 
+			MCR[15] == 0;
+	   }
+	endclass
+
    virtual task run_test();
-      $display("Running Basic Test");	
-      Env = new(100000, 20);
+      $display("Running Basic Test");
+      Env = new(1000, 20);	  
       Env.build();
 	  cl = new();
 	  fork
-		Env.run();
+		begin
+			BadMemTr bad = new();
+			Env.gen.blueprint = bad;
+		 Env.run();
+		end
 		cl.run();
 		state_enum_run();
 	  join_any
