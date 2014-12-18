@@ -38,9 +38,11 @@ class MemoryTransaction;
 	}
    constraint r_cyc { reset_cycles inside {[1:9]}; } 
    constraint c_irq {
+		(rst == 1) -> (IRQ == 0);
+		(rst == 1) -> (INTV == 0);
+		(rst == 1) -> (INTP == 0);
 		IRQ dist {0:/1, 1:/99 }; 
    }
-
  
    
    function MemoryTransaction copy(int i);

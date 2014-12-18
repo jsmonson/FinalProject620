@@ -45,6 +45,7 @@ class Driver;
 			    drv2mon.put(tr);
 			    repeat(tr.reset_cycles) @lc3if.cb;
 			    lc3if.rst <= 1'b1;
+				lc3if.cb.IRQ <= 0;
 			    @lc3if.cb;
 			    lc3if.rst <= 1'b0;			    
 			 end

@@ -30,7 +30,7 @@ class Scoreboard;
    event      chk2gen;
    
    MemoryTransaction CurT;
-   
+   bit IRQ_RST;
    //End Of Instruction Cycle Transaction
    MemoryTransaction EOIC;
    
@@ -54,7 +54,7 @@ class Scoreboard;
       Ext8 = new();
       Ext9 = new();   
       Ext11 = new();
-      
+      IRQ_RST = 0;
       Agt2SB = Agt2SBi;
       SB2Chk = SB2Chki;
       chk2gen = chk2geni;
@@ -66,10 +66,10 @@ class Scoreboard;
       $display("@%0d: Scoreboard: Resetting SB", $time);
       PC = 16'd0;
       PSR = 16'd0;
-      
-      INT = 1'b0;
-      INTV = 8'd0;
-      INTP = 3'b000;
+
+	  INT = 1'b0;
+	  INTV = 8'd0;
+	  INTP = 3'b000;
       SavedUSP = 16'd0;
       SavedSSP = 16'd0;
       sent_rst = 1'b0;
@@ -88,8 +88,7 @@ class Scoreboard;
 	 end
 	 if(CurT.IRQ) begin
 		INTV = CurT.INTV;
-		INTP = CurT.INTP;
-	    
+		INTP = CurT.INTP;  
 	 end
       end
    endtask // MbxRead
@@ -119,7 +118,8 @@ class Scoreboard;
       $display("@%0d:***SB READ TRANSACTION ***", $time);
       $display("@%0d:CurT.DataOut=%04h", $time, CurT.DataOut);  
       $display("@%0d:CurT.Address=%04h", $time, CurT.Address);      
-      $display("@%0d:CurT.MMIO_load=%d", $time, CurT.MemoryMappedIO_load);      
+      $display("@%0d:CurT.MMIO_load=%d", $time, CurT.MemoryMappedIO_load); 
+	  $display("IRQ  : : %X, CurIntv %X curINTP %X INT %X",CurT.IRQ, CurT.INTV, CurT.INTP, INT );
       CurT.Address = Address;
       CurT.we = 1'b0; //Read Operation
       CurT.en = 1'b1; //Memory Enable
@@ -163,6 +163,7 @@ class Scoreboard;
    task automatic UpdateSB();
      bit [3:0] opcode;
      bit      reset_tmp;
+	 $display("PRE  INTV %X INTP %X PSR %X", INTV, INTP, PSR);
       if(INTP > PSR[10:8]) begin
 	       INT = 1'b1;  
 		   $display("%0t, INT Detected",$time);
@@ -178,8 +179,8 @@ class Scoreboard;
 	  opcode = CurT.MemoryMappedIO_in[15:12];
 	else
 	  opcode = CurT.Opcode; 
-	 $display("in case reset:    %0d",reset);  
-$display("INTV %X INTP %X PSR %X", INTV, INTP, PSR);	 
+		$display("in case reset:    %0d",reset);  
+		$display("INTV %X INTP %X PSR %X", INTV, INTP, PSR);	 
 	case (opcode) 
 	  tbBR: LC3_BR();
           tbADD: LC3_ADD();
@@ -432,20 +433,13 @@ $display("INTV %X INTP %X PSR %X", INTV, INTP, PSR);
 	 PSR[2:0] = TEMP[2:0];
 	 PSR[10:8] = TEMP[10:8];
 	 PSR[15] = TEMP[15];
-<<<<<<< HEAD
-	 if (INTP > PSR[10:8]) begin
-	    INT = 1;
-	 end
-	 if (PSR[15])
-	   SaveSSPLoadUSP();
-=======
+
 		if (INTP > PSR[10:8]) begin
 			INT = 1;
 			$display("%0t INT in RTI", $time);
 		end
 		if (PSR[15])
 			SaveSSPLoadUSP();
->>>>>>> fb1322aa637febdc8aa07d1edbe2357de8a30b4e
 			
       end else
 	 PriveledgeModeException();
