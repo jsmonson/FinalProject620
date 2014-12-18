@@ -87,6 +87,7 @@ class Checker;
 	    $display("@%0d: Checker : Reset Mismatch : Transaction Timestamp: %0d", $time, fromMon.timestamp);
 	    $finish;	   
 	 end
+	 $display("@%0d: Checker: Found Reset Transaction", $time);
       end else begin
 	 	 
 	 compare16(fromScb.MCR, fromMon.MCR, "MCR");
