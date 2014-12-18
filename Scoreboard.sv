@@ -165,6 +165,7 @@ class Scoreboard;
      bit      reset_tmp;
       if(INTP > PSR[10:8]) begin
 	       INT = 1'b1;  
+		   $display("INT Detected");
 	    end
      if(INT) begin
 	incrPC();
@@ -177,7 +178,6 @@ class Scoreboard;
 	  opcode = CurT.MemoryMappedIO_in[15:12];
 	else
 	  opcode = CurT.Opcode; 
-	 $display("in case reset:    %0d",reset);  
 $display("INTV %X INTP %X PSR %X", INTV, INTP, PSR);	 
 	case (opcode) 
 	  tbBR: LC3_BR();
@@ -433,6 +433,7 @@ $display("INTV %X INTP %X PSR %X", INTV, INTP, PSR);
 	 PSR[15] = TEMP[15];
 		if (INTP > PSR[10:8]) begin
 			INT = 1;
+			$display("INT in RTI");
 		end
 		if (PSR[15])
 			SaveSSPLoadUSP();
