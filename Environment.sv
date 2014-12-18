@@ -10,7 +10,7 @@
     Scoreboard scb;
     Checker chk;
 	
-    mailbox #(MemoryTransaction) gen2agt, agt2drv, agt2scb, scb2chk, mon2chk;
+    mailbox #(MemoryTransaction) gen2agt, agt2drv, agt2scb, scb2chk, mon2chk, drv2mon;
     int count;
     event agt2scbhs, chk2gen;
     function new(int count, int clock_periodi);
@@ -26,11 +26,12 @@
       agt2scb = new();
       scb2chk = new();
       mon2chk = new();
-       
+      drv2mon = new();
+ 
       gen = new(gen2agt, chk2gen);
       agt = new(gen2agt,agt2drv, agt2scb,agt2scbhs);
-      drv = new(agt2drv, 3, vlc3if, chk2gen);
-      mon = new(mon2chk, vlc3if, clock_period);
+      drv = new(agt2drv, 3, vlc3if, chk2gen, drv2mon);
+      mon = new(mon2chk, vlc3if, clock_period, drv2mon);
       scb = new(agt2scb, scb2chk, chk2gen);
       chk = new(scb2chk, mon2chk, 
 		chk2gen, scb);
