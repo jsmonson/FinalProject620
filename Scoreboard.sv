@@ -62,6 +62,7 @@ class Scoreboard;
 
    function automatic void reset_sb();
       //Start with Reset Program State
+      $display("@%0d: Scoreboard: Resetting SB", $time);
       PC = 16'd0;
       PSR = 16'd0;
       
@@ -134,9 +135,9 @@ class Scoreboard;
       MbxRead();
       $display("@%0d***SB WRITE TRANSACTION ***",$time);
       $display("@%0d:CurT.DataOut=%04h", $time, CurT.DataOut);  
-      $display("@%0d:CurT.Address=%04h", $time, CurT.Address);      
+      $display("@%0d:Write Address=%04h", $time, Address);      
       $display("@%0d:CurT.MMIO_load=%d", $time, CurT.MemoryMappedIO_load);
-     $display("@%0d:Write Data=%04h", $time, Data); 
+      $display("@%0d:Write Data=%04h", $time, Data); 
       CurT.Address = Address;
       CurT.DataIn = Data;     
       CurT.we = 1'b1;
@@ -212,6 +213,7 @@ class Scoreboard;
    
    
    task automatic setcc(bit [15:0] val);
+      $display("@%0d: Scoreboard: Setting NZP: %0d",$time, PSR[2:0]);
       if(val == 16'd0) begin
 	PSR[2] = 0; PSR[1] = 1; PSR[0] = 0;
       end else if (val[15] == 1'b1) begin
@@ -364,18 +366,32 @@ class Scoreboard;
       PC = CurT.DataOut;
    endtask // LC3_TRAP
 
+   //Might Need to Fix This for RTI
    task automatic LC3_RTI();
       
       bit [15:0] TEMP;
       PrintInstr("RTI", 16'bx, 16'bx, 16'bx);
       if(PSR[15] == 0) begin
 	 ReadTransaction(RegFile[6]);
-	 PC = CurT.DataOut;
+	 
+	 if(CurT.Address >= 16'hfe00)
+	   PC = CurT.MemoryMappedIO_in;
+	 else
+	   PC = CurT.DataOut;
+	 
 	 RegFile[6] = RegFile[6] + 1;
 	 ReadTransaction(RegFile[6]);
-	 TEMP = CurT.DataOut;
+	 
+	 if(CurT.Address >= 16'hfe00)
+	   TEMP = CurT.MemoryMappedIO_in;
+	 else
+	   TEMP = CurT.DataOut;
+	 
 	 RegFile[6] = RegFile[6] + 1;
-	 PSR = TEMP;
+	 
+	 PSR[2:0] = TEMP[2:0];
+	 PSR[10:8] = TEMP[10:8];
+	 PSR[15] = TEMP[15];
       end else
 	 PriveledgeModeException();
       	 

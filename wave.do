@@ -20,4 +20,6 @@ add wave -radix hex sim:/top/LC3/CONTROL/NextState
 add wave -radix hex sim:/top/LC3/CONTROL/INT
 add wave -radix hex sim:/top/LC3/CONTROL/ldMAR
 add wave -radix hex sim:/top/LC3/CONTROL/branch_enable
+add wave -radix hex sim:/top/LC3/CONTROL/DR
+add wave -radix hex sim:/top/LC3/CONTROL/regWE
 add wave -radix hex sim:/EnvironmentPkg::opcode_c

@@ -297,9 +297,9 @@ always_comb begin
     TRAP1: begin
        if(memRDY) begin
 	//R7 <- PC
-        enaPC = 1'b1;
-        DR = 3'b111;
-        regWE = 1'b1;
+        enaPC <= 1'b1;
+        DR <= 3'b111;
+        regWE <= 1'b1;
 	//MDR <- MEM[MAR]
 	selMDR <= 1'b1;
 	ldMDR <= 1'b1;
@@ -448,7 +448,7 @@ always_comb begin
       //MDR<-MAR
       enaMDR <= 1'b1;
       ldMAR <= 1'b1;
-      NextState <= LD1;
+      NextState <=ST1;
     end
 
     STR0: begin

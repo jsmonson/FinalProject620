@@ -348,15 +348,14 @@ always_comb begin
   
    
   //Default is Memory Read
-  memWEo = 1'b0;
+  memWEo = memWEi;
   memEN = 1'b0;
   selINMUX = 1'b0; 
   MemoryMappedIO_load = 1'b0;
 
   if(MAR < 16'hFE00) begin
     //Memory Read/Write
-    memEN  = selMDR;
-    memWEo = memWEi;
+     memEN  = selMDR;
   end else if(MAR >= 16'hFE00 && selMDR == 1'b1) begin
       //MemoryMappedIO Read
      selINMUX = 1'b1;    
