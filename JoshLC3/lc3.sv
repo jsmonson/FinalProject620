@@ -118,4 +118,12 @@ lc3_control CONTROL( clki, rst,
 		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
 	             ldMAR, ldMDR, selMDR, memWEi, flagWE, enaMDR, memRDY);  
 
+
+`define assert_clk(arg) \
+	assert property (@(posedge clk) disable iff (!rst) arg)
+ERROR_STATE_SHOULD_NOT_CHANGE_WITH_LOW_MCR:
+	`assert_clk(!MCR[15] |-> ##1 $stable(CONTROL.state) && $stable(DATAPATH.PC) && $stable(DATAPATH.IR) && $stable(DATAPATH.MDR) && $stable(DATAPATH.MAR) &&
+	 $stable(DATAPATH.PSR) && $stable(DATAPATH.SavedUSP) && $stable(DATAPATH.INTP_reg) && $stable(DATAPATH.SavedSSP) && $stable(DATAPATH.Vector) &&
+	 $stable(DATAPATH.REGFILE[0] == 0) && $stable(DATAPATH.REGFILE[1] == 0) && $stable(DATAPATH.REGFILE[2] == 0) && $stable(DATAPATH.REGFILE[3] == 0) && 
+	 $stable(DATAPATH.REGFILE[4] == 0) && $stable(DATAPATH.REGFILE[5] == 0) && $stable(DATAPATH.REGFILE[6] == 0) && $stable(DATAPATH.REGFILE[7] == 0));
 endmodule

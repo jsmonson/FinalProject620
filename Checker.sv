@@ -3,17 +3,20 @@ class Checker;
    mailbox #(MemoryTransaction) Mon2Chk;
    
    event   GenNextTrans;
-
+   event   drv2chk;
+   
    Scoreboard SB;
    
    function new ( mailbox #(MemoryTransaction) SB2Chki,
 		  mailbox #(MemoryTransaction) Mon2Chki, 
 		  ref event GenNextTransi,
-		  Scoreboard SBi);
+		  Scoreboard SBi, ref event drv2chki);
       SB2Chk = SB2Chki;
       Mon2Chk = Mon2Chki;
       GenNextTrans = GenNextTransi;
-      SB = SBi;     
+      SB = SBi;
+      drv2chk = drv2chki;
+      
    endfunction // new
 
    task run (int count);
@@ -47,6 +50,7 @@ class Checker;
       $display("@%0d:Checker: Waiting for Driver to get to Fetch0", $time);
       while($root.top.LC3.CONTROL.state != 0) begin
 	$display("@%0d:Checker Waiting %0dns", $time, `CLK_PERIOD/2);
+	//wait(drv2chk.triggered());
 	#(`CLK_PERIOD/2);	 
 	//$display("@%0d:Checker Waited 1 Clock Cycle", $time);
       end

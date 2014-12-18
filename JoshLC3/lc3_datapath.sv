@@ -449,6 +449,31 @@ assign BUSS = (enaPSR) ? PSR : 16'hZZZZ;
 assign BUSS = (enaPCM1) ? PC_MINUS_1 : 16'hZZZZ;
 assign BUSS = (enaSP) ? SPMUX : 16'hZZZZ;
 assign BUSS = (enaVector) ? Vector : 16'hZZZZ;
-  
+
+
+`define assert_clk(arg) \
+	assert property (@(posedge clk) disable iff (!rst) arg)
+`define assert_async_rst(arg) \
+	assert property (@(posedge clk) arg)
+
+ERROR_RESET_SHOULD_CAUSE_SIGNALS_TO_BE_0:
+	`assert_async_rst(rst |-> (PSR == 0) && (MAR == 0) && (MDR == 0) && (IR == 0) && (Vector == 0) && 
+	(SavedUSP == 0) && (SavedSSP == 0) && (INTP_reg == 0) && (PC == 0) &&
+	(REGFILE[0] == 0) && (REGFILE[1] == 0) && (REGFILE[2] == 0) && (REGFILE[3] == 0) && (REGFILE[4] == 0) && 
+	(REGFILE[5] == 0) && (REGFILE[6] == 0) && (REGFILE[7] == 0));
+ERROR_MULTIPLE_ENABLE_SIGNALS_WENT_HIGH:
+	`assert_clk((enaMARM + enaPC + enaPCM1 + enaALU + enaMDR + enaVector + enaSP + enaPSR) <= 1);
+ERROR_MUX_SELECTS_SHOULD_NOT_HAVE_UNDEFINED_VALUES:
+	`assert_clk((selVectorMUX != 3) && (selPC != 3));
+ERROR_LOAD_SHOULD_HAVE_OCCURRED:
+	`assert_clk((enaMARM || enaPC || enaPCM1 || enaALU || enaMDR || enaVector || enaSP || enaPSR) |-> 
+	(ldPC || ldIR || ldMAR || ldMDR || ldSavedUSP || ldSavedSSP || ldPriority || ldVector || ldPriv || logicWE || flagWE));
+ERROR_NOTHING_DRIVING_ONTO_BUSS:
+	`assert_clk((ldPC || ldIR || ldMAR || ldMDR || ldSavedUSP || ldSavedSSP || ldPriority || ldVector || ldPriv || logicWE || flagWE) 
+	|-> (enaMARM || enaPC || enaPCM1 || enaALU || enaMDR || enaVector || enaSP || enaPSR) );
+ERROR_CONDITION_CODES_WERE_NOT_SET:
+	`assert_clk(flagWE |-> ##1 (N || Z || P));
+ERROR_INTERRUPT_PRIORITY_SHOULD_BE_HIGH_ENOUGH_TO_FIRE:
+	`assert_clk((INTP_reg > PSR[10:8]) |-> INT);
 
 endmodule

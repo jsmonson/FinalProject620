@@ -10,7 +10,8 @@ class Driver;
       bit 	      first_transaction_happened;
       bit	      transaction_complete;
       event 	      reset_complete;
-       
+      event 	      drv2chk;
+ 
       MemoryTransaction tr;
 	  Driver_cbs cbs[$];
 	  int mem_tran_num;
@@ -21,14 +22,14 @@ class Driver;
       mailbox 	#(MemoryTransaction) drv2mon;
    
       function new(input mailbox #(MemoryTransaction) agt2drv, input int mem_tran_num, vLC3if lc3if, ref event chk2geni,
-		   mailbox #(MemoryTransaction) drv2moni);
+		   mailbox #(MemoryTransaction) drv2moni, event drv2chki);
         this.agt2drv = agt2drv;
 		this.mem_tran_num = mem_tran_num;
 		this.lc3if = lc3if;
 	 first_transaction_happened = 0;
 	 chk2gen = chk2geni;
 	 drv2mon = drv2moni;
-	
+	 drv2chk = drv2chki;
 	  endfunction
       task run(input int count);
 	    repeat(5) @lc3if.cb; // reset
@@ -54,7 +55,8 @@ class Driver;
 		      begin : TransactionThread //Transaction Thread
 			 while (!$root.top.LC3.ldMAR && $root.top.LC3.CONTROL.state != 0) begin // f0
 			    $display("@%0d: Driver: Stepping Clock", $time);
-			    @lc3if.cb;			   
+			    @lc3if.cb;	
+			    ->drv2chk;			  
 			 end
 			 //$display("@%0d: Driver: DUT Current State: %0d ldMAR=%0d", $time, $root.top.LC3.CONTROL.state,$root.top.LC3.ldMAR);
 			 if(!$root.top.LC3.CONTROL.state && first_transaction_happened) begin
