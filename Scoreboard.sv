@@ -69,7 +69,9 @@ class Scoreboard;
       INT = 1'b0;
       INTV = 8'd0;
       INTP = 3'b000;
-
+	  SavedUSP = 16'd0;
+	  SavedSSP = 16'd0;
+	  
       reset = 0;
       foreach (RegFile[i])
 	RegFile[i] = 16'd0;
