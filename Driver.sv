@@ -86,29 +86,14 @@ class Driver;
 			    end
 		    	 end   
 		      end
-		      
-		   join
-		   			
-		   end // repeat on Instructions
-      
+		    
+		   join  			
+		  
+		  end // repeat on Instructions
     endtask
-	/*task init_reset(input int count);
-		lc3if.rst <= 1'b1;
-		repeat(count) @lc3if.cb;
-		lc3if.rst <= 1'b0;
-	endtask*/
 	task transmit(MemoryTransaction tr);
 		@lc3if.cb;
 		$display("@%0d: Driver: Driving Transaction %0d",$time, tr.ID());
-		/*if (tr.rst) begin
-			$display("@%0t: Driver: Reset!",$time);
-			repeat(tr.reset_cycles) @lc3if.cb;
-			lc3if.rst <= 1'b1;
-		        @lc3if.cb;
-		        lc3if.rst <= 1'b0;
-			first_transaction_happened = 0;
-		end
-		else begin*/
 			repeat(mem_tran_num) @lc3if.cb;
 			lc3if.cb.IRQ <= tr.IRQ;
 			if (tr.IRQ == 1) begin
@@ -121,7 +106,6 @@ class Driver;
 			lc3if.cb.memRDY <= 1;
 			@lc3if.cb;
 			lc3if.cb.memRDY <= 0;
-		//end
 	endtask
   endclass
  
