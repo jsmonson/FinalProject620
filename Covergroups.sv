@@ -3,7 +3,7 @@ covergroup opcode_coverage with function sample(bit ldIR);
 	
 	// all states have executed
 	opcodes: coverpoint opcode_c iff (ldIR);
-	ldIr: coverpoint ldIR iff (ldIR == 1);
+	
 	// every state has preceded and followed every other states
 	preceded_followed: coverpoint opcode_c iff (ldIR) { 
         bins states[] = (tbBR,tbADD,tbLD,tbST,tbJSR,tbAND,tbLDR,tbSTR,tbRTI,tbNOT,tbLDI,tbSTI,tbJMP,tbRES,tbLEA,tbTRAP => 
@@ -112,10 +112,12 @@ endgroup
 covergroup address_coverage with function sample(bit ldMAR);
 	option.per_instance = 1;
 	address_ranges: coverpoint $root.top.LC3.DATAPATH.MAR{ 
-		bins Trap = {[16'h0000:16'h00FF]};
-		bins Interrupt = {[16'h0100:16'h01FF]};
-		bins User[] = {[16'h3000:16'hFE00]};
-		bins MMAPIO = {[16'hFE00:16'hFFFF]};
+		option.auto_bin_max = 256;
+		bins Trap[] = {[16'h0000:16'h00FF]};
+		bins Interrupt[] = {[16'h0100:16'h01FF]};
+		bins Stacks = {[16'h0200:16'h2FFF]};
+		bins User = {[16'h3000:16'hFDFF]};
+		bins MMAPIO[] = {[16'hFE00:16'hFFFF]};
 	} 
 endgroup
 
