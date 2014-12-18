@@ -2,6 +2,7 @@ import factory_pkg::*;
 import EnvironmentPkg::*;
 
 `include "Test0.sv"
+`include "Test1.sv"
  
 program test;
 

@@ -1,3 +1,4 @@
+
 class MemoryTransaction;
    time timestamp; //Monitor will fill in this value
    
@@ -32,9 +33,9 @@ class MemoryTransaction;
    rand bit [15:0] MCR;
 
    //Change these later... if necessary
-   constraint c_mcr { MCR==16'h8000; };
+   constraint c_mcr { MCR==16'h8000; }
    constraint c_rst { 
-		rst dist {0:/70, 1:/30 };
+		rst dist {0:/10, 1:/90 };
 	}
    constraint r_cyc { reset_cycles inside {[1:9]}; } 
    constraint c_irq {

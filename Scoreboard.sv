@@ -163,10 +163,8 @@ class Scoreboard;
    task automatic UpdateSB();
      bit [3:0] opcode;
      bit      reset_tmp;
-	 $display("PRE  INTV %X INTP %X PSR %X", INTV, INTP, PSR);
       if(INTP > PSR[10:8]) begin
 	       INT = 1'b1;  
-		   $display("%0t, INT Detected",$time);
 	    end
      if(INT) begin
 	incrPC();
@@ -178,9 +176,7 @@ class Scoreboard;
 	if(PC >= 16'hfe00)
 	  opcode = CurT.MemoryMappedIO_in[15:12];
 	else
-	  opcode = CurT.Opcode; 
-		$display("in case reset:    %0d",reset);  
-		$display("INTV %X INTP %X PSR %X", INTV, INTP, PSR);	 
+	  opcode = CurT.Opcode; 	 
 	case (opcode) 
 	  tbBR: LC3_BR();
           tbADD: LC3_ADD();
@@ -205,7 +201,6 @@ class Scoreboard;
      end // else: !if(CurT.INT)
 
      reset_tmp = reset;
-	 $display("reset:    %0d",reset);
      if(reset)
        reset_sb();
 
@@ -436,7 +431,6 @@ class Scoreboard;
 
 		if (INTP > PSR[10:8]) begin
 			INT = 1;
-			$display("%0t INT in RTI", $time);
 		end
 		if (PSR[15])
 			SaveSSPLoadUSP();
@@ -470,7 +464,6 @@ class Scoreboard;
    
    task automatic SavePSRAndPCLoadVector(bit [15:0] Vector);
       //Decrement SSP
-      $display("%0t : REg 6 = %X",$time, RegFile[6]);
       RegFile[6] = RegFile[6] - 1;
       //Put the PSR on the Supervisor Stack
 	  //$display("%0t : REg 6 = %X",$time, RegFile[6]);

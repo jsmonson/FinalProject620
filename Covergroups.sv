@@ -89,6 +89,11 @@ covergroup reset_coverage with function sample(bit rst );
 	reset_in_all_states: cross reset, states;
 endgroup 
 
+covergroup MCR_coverage with function sample(bit mcr_15 );
+	option.per_instance = 1;
+	mcr_15: coverpoint mcr_15 iff (!$root.top.lc3_if.rst) {ignore_bins zero = {1};}
+endgroup
+
 covergroup interrupt_coverage with function sample(bit INT);
 	option.per_instance = 1;
 	interrupt: coverpoint INT {option.weight = 0; ignore_bins zero = {0};}
@@ -126,6 +131,7 @@ class coverClass;
 	interrupt_coverage i_c;
 	exception_coverage e_c;
 	address_coverage a_c;
+	MCR_coverage m_c;
 	function new();
 		s_c = new();
 		o_c = new();
@@ -133,6 +139,7 @@ class coverClass;
 		i_c = new();
 		e_c = new();
 		a_c = new();
+		m_c = new();
 	endfunction
 	task run();
 		fork 
@@ -147,6 +154,10 @@ class coverClass;
 			forever begin
 				@$root.top.lc3_if.rst;
 				r_c.sample($root.top.lc3_if.rst);
+			end
+			forever begin
+				@$root.top.lc3_if.clk;
+				m_c.sample($root.top.lc3_if.MCR[15]);
 			end
 		join
 	endtask
