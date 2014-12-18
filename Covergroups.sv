@@ -89,7 +89,7 @@ covergroup interrupt_coverage with function sample(bit INT);
 	option.per_instance = 1;
 	interrupt: coverpoint INT {option.weight = 0; ignore_bins zero = {0};}
 	vectors: coverpoint $root.top.LC3.INTV;
-	priority_c: coverpoint INTP iff (INT); 
+	priority_c: coverpoint $root.top.LC3.INTP iff (INT); 
 	interrupt_in_all_states: cross interrupt, opcode_c;
 endgroup
 
