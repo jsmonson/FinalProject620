@@ -8,7 +8,9 @@ virtual class Driver_cbs;
 class Driver;
       mailbox #(MemoryTransaction) agt2drv;
       bit 	      first_transaction_happened;
-   
+      bit	      transaction_complete;
+      event 	      reset_complete;
+       
       MemoryTransaction tr;
 	  Driver_cbs cbs[$];
 	  int mem_tran_num;
@@ -34,39 +36,60 @@ class Driver;
 		   $display("@%0t: Driver: Waiting for Next Transaction!",$time);
 		   agt2drv.get(tr);
 		   $display("@%0t: Driver: Recieved Next Transaction id=%0d!",$time, tr.id);
-		   if (tr.rst) begin
-		      $display("@%0t: Driver: Reset! Reset Cycles %d",$time, tr.reset_cycles);
-		      drv2mon.put(tr);
-		      repeat(tr.reset_cycles) @lc3if.cb;
-		      lc3if.rst <= 1'b1;
-		      @lc3if.cb;
-		      lc3if.rst <= 1'b0;
-		      //first_transaction_happened = 0;
-		   end else begin
-		      while (!$root.top.LC3.ldMAR && $root.top.LC3.CONTROL.state != 0) begin // f0
-			   $display("@%0d: Driver: Stepping Clock", $time);
-			 @lc3if.cb;			   
-		      end
-		      //$display("@%0d: Driver: DUT Current State: %0d ldMAR=%0d", $time, $root.top.LC3.CONTROL.state,$root.top.LC3.ldMAR);
-		      if(!$root.top.LC3.CONTROL.state && first_transaction_happened) begin
-			 $display("@%0d:DRIVER: In FETCH0, waiting for Checker to Synchronize",$time);
-			 wait(chk2gen.triggered());
-			 isInstruction = 1;
-			 $display("@%0d:DRIVER: Received chk2gen", $time);
-		      end 
-		       
-		      if ($root.top.LC3.ldMAR) begin
-			 if (isInstruction) begin
-			    opcode = tr.Opcode;	
-			    isInstruction = 0;
+		   transaction_complete = 0;
+		   fork
+		      begin
+			 //Reset Thread
+			 if (tr.rst) begin
+			    $display("@%0t: Driver: Reset! Reset Cycles %d",$time, tr.reset_cycles);
+			    drv2mon.put(tr);
+			    repeat(tr.reset_cycles) @lc3if.cb;
+			    lc3if.rst <= 1'b1;
+			    @lc3if.cb;
+			    lc3if.rst <= 1'b0;			    
 			 end
-			 foreach(cbs[i]) cbs[i].pre_tx(tr); // callbacks
-			 first_transaction_happened = 1;
-		      	 transmit(tr);
-			 foreach (cbs[i]) cbs[i].post_tx(tr);
-		      end // if ($root.top.LC3.ldMAR)
-		   end
-		end
+			 -> reset_complete;			 
+		      end // End Reset Thread
+		      begin : TransactionThread //Transaction Thread
+			 while (!$root.top.LC3.ldMAR && $root.top.LC3.CONTROL.state != 0) begin // f0
+			    $display("@%0d: Driver: Stepping Clock", $time);
+			    @lc3if.cb;			   
+			 end
+			 //$display("@%0d: Driver: DUT Current State: %0d ldMAR=%0d", $time, $root.top.LC3.CONTROL.state,$root.top.LC3.ldMAR);
+			 if(!$root.top.LC3.CONTROL.state && first_transaction_happened) begin
+			    $display("@%0d:DRIVER: In FETCH0, waiting for Checker to Synchronize",$time);
+			    wait(chk2gen.triggered());
+			    isInstruction = 1;
+			    $display("@%0d:DRIVER: Received chk2gen", $time);
+			 end 
+		       
+			 if ($root.top.LC3.ldMAR) begin
+			    if (isInstruction) begin
+			       opcode = tr.Opcode;	
+			       isInstruction = 0;
+			    end
+			    foreach(cbs[i]) cbs[i].pre_tx(tr); // callbacks
+			    first_transaction_happened = 1;
+			    transmit(tr);
+			    foreach (cbs[i]) cbs[i].post_tx(tr);
+			 end // if ($root.top.LC3.ldMAR)
+			 transaction_complete = 1;
+		      end //End Transaction Thead
+
+		      begin : WatchThread
+			 if(tr.rst) begin
+			    wait(reset_complete.triggered());
+			    if(!transaction_complete) begin
+			      lc3if.cb.memRDY <= 0;
+			      disable TransactionThread;
+			    end
+		    	 end   
+		      end
+		      
+		   join
+		   			
+		   end // repeat on Instructions
+      
     endtask
 	/*task init_reset(input int count);
 		lc3if.rst <= 1'b1;

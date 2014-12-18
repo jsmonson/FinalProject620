@@ -38,7 +38,8 @@ class MemoryTransaction;
 	};
    constraint r_cyc { reset_cycles inside {[1:9]}; } 
    constraint c_irq {
-		IRQ dist {0:/80, 1:/20 }; 
+		//IRQ dist {0:/80, 1:/20 };
+      IRQ==0;
    };
 
  
