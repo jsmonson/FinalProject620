@@ -61,7 +61,7 @@ class Driver;
 		@lc3if.cb;
 		$display("@%0d: Driver: Driving Transaction %0d",$time, tr.ID());
 		if (tr.rst) begin
-			$display("@%0t: Reset!",$time);
+			$display("@%0t: Driver: Reset!",$time);
 			lc3if.rst <= 1'b1;
 			repeat(tr.reset_cycles) @lc3if.cb;
 			lc3if.rst <= 1'b0;

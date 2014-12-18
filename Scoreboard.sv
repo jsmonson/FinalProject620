@@ -19,7 +19,8 @@ class Scoreboard;
    bit [15:0] PSR;
    bit [15:0] SavedUSP;
    bit [15:0] SavedSSP;
-
+   bit 	      sent_rst;
+   
    bit 	      INT;
    bit [7:0]  INTV;
    bit [2:0]  INTP;
@@ -69,20 +70,22 @@ class Scoreboard;
       INT = 1'b0;
       INTV = 8'd0;
       INTP = 3'b000;
-	  SavedUSP = 16'd0;
-	  SavedSSP = 16'd0;
-	  
+      SavedUSP = 16'd0;
+      SavedSSP = 16'd0;
+      sent_rst = 1'b0;
       reset = 0;
       foreach (RegFile[i])
 	RegFile[i] = 16'd0;
    endfunction // reset_sb
 
    task automatic MbxRead();
-      if(!reset || tCount > 0) begin
+      if(!reset && tCount > 0) begin
 	 Agt2SB.get(CurT);
 	 $display("@%0d: Scoreboard: Received Transaction %0d", $time, CurT.ID());
-	 if(CurT.rst)
+	 if(CurT.rst) begin
+	   $display("@%0d: Scoreboard: Found Reset Transaction", $time);
 	   reset = 1'b1;
+	 end
 	 if(CurT.IRQ) begin
 	    if(CurT.INTP > PSR[10:8]) begin
 	       INT = 1'b1;
@@ -94,10 +97,12 @@ class Scoreboard;
    endtask // MbxRead
 
    task automatic MbxWrite();
-      if(tCount > 0) begin
+      if(tCount > 0 && !sent_rst) begin
 	 $display("@%0d: Scoreboard : Sending Transaction %0d to Checker", $time, CurT.ID());
 	 SB2Chk.put(CurT);
 	 tCount--;
+	 if(CurT.rst)
+	   sent_rst = 1'b1;
       end
    endtask // MbxWrite
 
@@ -159,7 +164,8 @@ class Scoreboard;
    
    task automatic UpdateSB();
      bit [3:0] opcode;
-     
+     bit      reset_tmp;
+      
      if(INT) begin
 	incrPC();
 	Interrupt();
@@ -194,14 +200,17 @@ class Scoreboard;
 	  tbTRAP: LC3_TRAP();
       endcase // case (I.Opcode)
      end // else: !if(CurT.INT)
-    
+
+     reset_tmp = reset;
      if(reset)
        reset_sb();
 
      //Send End Of Instruction Cycle Transaction
      //This tell the Checker to Compare SB and DUT State
-     $display("@%0d: Scoreboard: Sending End-of-instruction-cycle Transaction", $time); 
-     SB2Chk.put(EOIC);
+     if(!reset_tmp) begin
+	$display("@%0d: Scoreboard: Sending End-of-instruction-cycle Transaction", $time); 
+	SB2Chk.put(EOIC);
+     end
      //Wait for Checker to Finish Comparing State
      $display("ScoreBoard Wait for Checker to Comparing State");
      @chk2gen;

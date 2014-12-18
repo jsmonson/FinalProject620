@@ -31,6 +31,7 @@ class Monitor;
 	    //Wait for the Reset to fall
 	    while(lc3if.rst) #1;
 	    //Create a Reset Transaction and Send it.
+	    $display("@%0d: Monitor Found Reset Transaction", $time);
 	    toSend = new ();
 	    toSend.rst = 1'b1;
 	    toSend.id = id++;
