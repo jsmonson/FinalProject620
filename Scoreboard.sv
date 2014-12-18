@@ -234,7 +234,7 @@ class Scoreboard;
    
    task automatic LC3_ADD();
                 
-      if(CurT.DataOut[5]==0) begin
+      if(CurT.Imm()==0) begin
 	 //Register Mode
 	 PrintInstr("ADD", CurT.DR(), CurT.SR1(), CurT.SR2());
 	 RegFile[CurT.DR()] = RegFile[CurT.SR1()] + RegFile[CurT.SR2()];
@@ -249,9 +249,8 @@ class Scoreboard;
    endtask // LC3_ADD
   
    
-   task automatic  LC3_AND();
-           
-      if(CurT.DataOut[5]==0) begin
+   task automatic  LC3_AND();  
+      if(CurT.Imm()==0) begin
 	 //Register Mode
 	 PrintInstr("AND", CurT.DR(), CurT.SR1(), CurT.SR2());
 	 RegFile[CurT.DR()] = RegFile[CurT.SR1()] & RegFile[CurT.SR2()];
@@ -280,7 +279,7 @@ class Scoreboard;
    task automatic LC3_JSR();
   
       RegFile[7] = PC;
-      if(CurT.DataOut[11]==0) begin
+      if(CurT.JSRR==0) begin
 	PC = RegFile[CurT.BaseR()];
 	PrintInstr("JSRR", CurT.BaseR(), 16'bx, 16'bx);
       end else begin
@@ -296,6 +295,14 @@ class Scoreboard;
       end else begin
 	RegFile[dr] = CurT.DataOut;
 	setcc(CurT.DataOut); 
+      end
+   endtask // LOAD_MEM
+   
+   task automatic STORE_MEM(bit [2:0] sr, bit [15:0] addr);
+      if(addr >= 16'hFE00) begin
+		CurT.MemoryMappedIO_out = RegFile[sr];
+      end else begin
+		CurT.DataIn = RegFile[sr]; 
       end
    endtask // LOAD_MEM
    
@@ -344,29 +351,46 @@ class Scoreboard;
    endtask // LC3_NOT
 
    task automatic LC3_ST();
+	  bit [15:0] staddr = PC + Ext9.SEXT(CurT.PCoffset9());
+	  bit [2:0]  SR = CurT.SR();
       PrintInstr("ST", CurT.SR(), CurT.PCoffset9(), 16'bx);
-      WriteTransaction(PC + Ext9.SEXT(CurT.PCoffset9()), RegFile[CurT.SR()]);
+      WriteTransaction(staddr, SR);
+	  STORE_MEM(SR, staddr);
    endtask // LC3_ST
 
    task automatic LC3_STI();
-		bit [2:0] SR_temp;
-      PrintInstr("STI", CurT.SR(),CurT.PCoffset9(), 16'bx);
-	  
-	  SR_temp = CurT.SR();
-      ReadTransaction(PC + Ext9.SEXT(CurT.PCoffset9()));
-      WriteTransaction(CurT.DataOut, RegFile[SR_temp]); // CurT.SR() has now changed thanks to the previous transaction
+	  bit [2:0] SR_temp = CurT.SR();
+	  bit [15:0] addri = PC + Ext9.SEXT(CurT.PCoffset9());
+	  PrintInstr("STI", CurT.SR(),CurT.PCoffset9(), 16'bx);
+	  ReadTransaction(addri);
+      if(addri >= 16'hfe00) begin
+		addri = CurT.MemoryMappedIO_in;
+		WriteTransaction(addri, RegFile[SR_temp]);
+      end else begin
+		addri = CurT.DataOut;
+		WriteTransaction(addri, RegFile[SR_temp]);
+      end
+      STORE_MEM(SR_temp, addri);
+     // ReadTransaction(PC + Ext9.SEXT(CurT.PCoffset9()));
+     // WriteTransaction(CurT.DataOut, RegFile[SR_temp]); // CurT.SR() has now changed thanks to the previous transaction
    endtask // LC3_STI
 
    task automatic LC3_STR();
+	  bit [15:0] staddr = RegFile[CurT.BaseR()]+Ext6.SEXT(CurT.offset6);
+	  bit [2:0]  SR = CurT.SR();
       PrintInstr("STR", CurT.SR(), CurT.BaseR(), CurT.offset6());
-      WriteTransaction(RegFile[CurT.BaseR()] + Ext6.SEXT(CurT.offset6()), RegFile[CurT.SR()]);
+      WriteTransaction(staddr, SR);
+	  STORE_MEM(SR, staddr);
    endtask // LC3_STR
 
    task automatic LC3_TRAP();
       PrintInstr("TRAP", CurT.trapvect8(), 16'bx, 16'bx);
       RegFile[7] = PC;
       ReadTransaction(Ext8.ZEXT(CurT.trapvect8));
-      PC = CurT.DataOut;
+	  if(CurT.Address >= 16'hfe00)
+	   PC = CurT.MemoryMappedIO_in;
+	  else
+       PC = CurT.DataOut;
    endtask // LC3_TRAP
 
    //Might Need to Fix This for RTI
@@ -384,7 +408,6 @@ class Scoreboard;
 	 
 	 RegFile[6] = RegFile[6] + 1;
 	 ReadTransaction(RegFile[6]);
-	 
 	 if(CurT.Address >= 16'hfe00)
 	   TEMP = CurT.MemoryMappedIO_in;
 	 else
@@ -395,6 +418,10 @@ class Scoreboard;
 	 PSR[2:0] = TEMP[2:0];
 	 PSR[10:8] = TEMP[10:8];
 	 PSR[15] = TEMP[15];
+		
+		if (PSR[15])
+			SaveSSPLoadUSP();
+			
       end else
 	 PriveledgeModeException();
       	 
@@ -415,6 +442,13 @@ class Scoreboard;
       RegFile[6] = SavedSSP;
    endtask // SaveUSPLoadSSP
    
+   task automatic SaveSSPLoadUSP();
+      //Save the User Stack Pointer
+      SavedSSP = RegFile[6];
+      //Load the Supervisor Stack Pointer
+      RegFile[6] = SavedUSP;
+   endtask // SaveUSPLoadSSP
+   
    task automatic SavePSRAndPCLoadVector(bit [15:0] Vector);
       //Decrement SSP
       RegFile[6] = RegFile[6] - 1;
@@ -426,7 +460,10 @@ class Scoreboard;
       WriteTransaction(RegFile[6], PC-1);
       //Update PC With Interrupt or Exception Vector
       ReadTransaction(Vector);
-      PC = CurT.DataOut;
+	  if(CurT.Address >= 16'hfe00)
+	   PC = CurT.MemoryMappedIO_in;
+	  else
+		PC = CurT.DataOut;
    endtask
       
    task automatic Interrupt();

@@ -73,6 +73,20 @@ class MemoryTransaction;
 	return DataOut[15:12];
    endfunction // Opcode
 
+   function bit [2:0] Imm();
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[5];
+      else
+	return DataOut[5];
+   endfunction // DR
+   
+   function bit [2:0] JSRR();
+       if(Address>=16'hfe00)
+	return MemoryMappedIO_in[11];
+      else
+	return DataOut[11];
+   endfunction // DR
+   
    function bit [2:0] DR();
        if(Address>=16'hfe00)
 	return MemoryMappedIO_in[11:9];
