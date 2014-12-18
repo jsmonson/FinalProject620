@@ -411,11 +411,9 @@ assign NZP = {N,Z,P};
 always_comb  begin
   if(BUSS == 16'h0000) begin
     N <= 1'b0; Z <= 1'b1; P <= 1'b0; 
-  end
-  if(BUSS[15] == 1'b1) begin
+  end else if(BUSS[15] == 1'b1) begin
     N <= 1'b1; Z <= 1'b0; P <= 1'b0; 
-  end
-  if( | BUSS[14:0] == 1'b1) begin
+  end else if( | BUSS[14:0] == 1'b1) begin
     N <= 1'b0; Z <= 1'b0; P <= 1'b1; 
   end
 end 

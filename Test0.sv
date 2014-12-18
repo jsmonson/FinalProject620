@@ -5,7 +5,7 @@ class Test0 extends component;
    coverClass cl;
    virtual task run_test();
       $display("Running Basic Test");	
-      Env = new(100, 20);
+      Env = new(100002, 20);
       Env.build();
 	  cl = new();
 	  fork

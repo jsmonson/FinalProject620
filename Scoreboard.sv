@@ -170,7 +170,7 @@ class Scoreboard;
 	else
 	  opcode = CurT.Opcode; 
 	       
-	case (CurT.Opcode) 
+	case (opcode) 
 	  tbBR: LC3_BR();
           tbADD: LC3_ADD();
           tbLD: LC3_LD();

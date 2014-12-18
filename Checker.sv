@@ -88,6 +88,7 @@ class Checker;
 	    $finish;	   
 	 end
       end else begin
+	 	 
 	 compare16(fromScb.MCR, fromMon.MCR, "MCR");
 	 compare16(fromScb.Address, fromMon.Address, "Address");
 	 compare16(fromScb.DataOut, fromMon.DataOut, "DataOut");	 

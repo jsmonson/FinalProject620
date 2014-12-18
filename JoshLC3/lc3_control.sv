@@ -214,6 +214,7 @@ always_comb begin
 
     RTI4: begin
        //MAR,SP<-SP+1
+       SR1 <= 3'b110;
        selSPMUX <= 2'b10;
        enaSP <= 1'b1;
        ldMAR <= 1'b1;
@@ -223,11 +224,11 @@ always_comb begin
     end
 
     RTI5: begin
-       //MDR<-Mem[MAR]
-       selMDR <= 1'b1;
+       //MDR<-Mem[MAR]       
        if(memRDY) begin
+	 selMDR <= 1'b1;
 	 ldMDR <= 1'b1;
-	 NextState <= RTI3;
+	 NextState <= RTI6;
        end     
     end
     
@@ -244,6 +245,7 @@ always_comb begin
     RTI7: begin
        selSPMUX <= 2'b10;
        enaSP <= 1'b1;
+       SR1 <= 3'b110;
        DR <= 3'b110;
        regWE <= 1'b1;
        if(PRIV)
@@ -277,6 +279,7 @@ always_comb begin
        ldMDR <= 1'b1;
        enaPSR <= 1'b1;
        //PSR[15]<-0
+       selPSRMUX <= 1'b1;
        SetPriv <= 1'b0;
        ldPriv <= 1'b1;
        //Finish With Interrupt
@@ -372,6 +375,7 @@ always_comb begin
         
     LDR0: begin
        //MAR<-SR1+ offset6
+       SR1 <= IR[8:6];
        selEAB1 <= 1'b1;
        selEAB2 <= 2'b01;
        selMAR <= 1'b0;
@@ -556,7 +560,7 @@ always_comb begin
      ldSavedUSP <= 1'b1;
      //SP <- Saved_SSP
      DR <= 3'b110;
-     selSPMUX <= 2'b11;
+     selSPMUX <= 2'b00;
      enaSP <= 1'b1;
      regWE <= 1'b1;
      NextState <= INT2; 
