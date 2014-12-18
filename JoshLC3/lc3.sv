@@ -88,7 +88,8 @@ logic INT;
 logic [1:0] selSPMUX;
 logic selPSRMUX;
 logic [1:0] selVectorMUX;
-
+logic    PSR_15;
+   
 
 assign clki = MCR[15] & clk;
       
@@ -103,7 +104,8 @@ lc3_datapath DATAPATH(clki, rst,
 		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
 		     IRQ, INTP, INTV, INT,
 		     MemoryMappedIO_in, MemoryMappedIO_out, MemoryMappedIO_load,
-                     memory_din, memory_dout, memory_addr, memEN, memWEi, memWE_out);
+                     memory_din, memory_dout, memory_addr, memEN, memWEi, memWE_out,
+		     PSR_15);
 
 lc3_control CONTROL( clki, rst, 
                      IR, N, Z, P, PRIV,  

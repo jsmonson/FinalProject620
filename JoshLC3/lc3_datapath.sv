@@ -10,7 +10,8 @@ module lc3_datapath ( clk, rst,
 		     selSPMUX, selPSRMUX, selVectorMUX, SetPriv,
 		     IRQ, INTP, INTV, INT,
 		     MemoryMappedIO_in, MemoryMappedIO_out, MemoryMappedIO_load, 
-                     memory_din, memory_dout, memory_addr, memEN, memWEi, memWEo); 
+                     memory_din, memory_dout, memory_addr, memEN, memWEi, memWEo,
+		      PSR_15); 
 input logic clk;
 input logic rst;
 
@@ -75,7 +76,7 @@ input logic 	    IRQ; //Interrupt Request
 input logic [2:0]   INTP; //Interrupt Priority
 input logic [7:0]   INTV; //Interrupt Vector
 output logic        INT; //Inform Control of Interrupt
-    
+output logic     PSR_15;
 //Datapath Registers 
 logic [15:0] PC;
 logic [15:0] IR;
@@ -130,6 +131,7 @@ logic [15:0] ZEXT;
 
 logic [15:0] memOut; 
 
+   
  
 assign IR_OUT = IR; 
 assign N_OUT = PSR[2]; 
@@ -139,7 +141,8 @@ assign P_OUT = PSR[0];
 assign memOut = memory_dout; 
 assign memory_din = MDR; 
 assign memory_addr = MAR;
-
+assign PSR_15 = PSR[15];
+   
 /************************************
  Program Counter 
 ************************************/

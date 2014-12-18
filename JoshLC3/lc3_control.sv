@@ -191,6 +191,7 @@ always_comb begin
        //PSR[15]<-0
        SetPriv <= 1'b0;
        ldPriv <= 1'b1;
+       selPSRMUX<= 1'b1;
        //Finish With Interrupt 
        NextState <= INT1;
     end
@@ -261,6 +262,7 @@ always_comb begin
        //SP<-SavedUSP
        DR <= 3'b110;
        regWE <= 1'b1;
+       enaSP <= 1'b1;
        selSPMUX <= 2'b11;
        NextState <= FETCH0;
     end
