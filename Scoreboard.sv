@@ -87,11 +87,9 @@ class Scoreboard;
 	   reset = 1'b1;
 	 end
 	 if(CurT.IRQ) begin
-	    if(CurT.INTP > PSR[10:8]) begin
-	       INT = 1'b1;
-	       INTV = CurT.INTV;
-	       INTP = CurT.INTP;
-	    end
+		INTV = CurT.INTV;
+		INTP = CurT.INTP;
+	    
 	 end
       end
    endtask // MbxRead
@@ -165,7 +163,9 @@ class Scoreboard;
    task automatic UpdateSB();
      bit [3:0] opcode;
      bit      reset_tmp;
-      
+      if(INTP > PSR[10:8]) begin
+	       INT = 1'b1;  
+	    end
      if(INT) begin
 	incrPC();
 	Interrupt();
@@ -429,7 +429,9 @@ class Scoreboard;
 	 PSR[2:0] = TEMP[2:0];
 	 PSR[10:8] = TEMP[10:8];
 	 PSR[15] = TEMP[15];
-		
+		if (INTP > PSR[10:8]) begin
+			INT = 1;
+		end
 		if (PSR[15])
 			SaveSSPLoadUSP();
 			
@@ -458,12 +460,14 @@ class Scoreboard;
       SavedSSP = RegFile[6];
       //Load the Supervisor Stack Pointer
       RegFile[6] = SavedUSP;
-   endtask // SaveUSPLoadSSP
+   endtask // SaveSSPLoadUSP
    
    task automatic SavePSRAndPCLoadVector(bit [15:0] Vector);
       //Decrement SSP
+	//  $display("%0t : REg 6 = %X",$time, RegFile[6]);
       RegFile[6] = RegFile[6] - 1;
       //Put the PSR on the Supervisor Stack
+	  //$display("%0t : REg 6 = %X",$time, RegFile[6]);
       WriteTransaction(RegFile[6], PSR);
       //Decrement SSP
       RegFile[6] = RegFile[6] - 1;
@@ -478,18 +482,21 @@ class Scoreboard;
    endtask
       
    task automatic Interrupt();
-      
+      bit [2:0] TEMP;
       if(PSR[15] == 1'b1) begin
 	 SaveUSPLoadSSP();
       end
-
-      SavePSRAndPCLoadVector(INTV);
-
+	  
+	  $display("INTV %X", INTV);
+	  $display("INTP %X", INTP);
+	  TEMP = INTP;
+      SavePSRAndPCLoadVector({8'h01,INTV});
+		$display("INTP2 %X", INTP);
       //Update PSR Priority
-      PSR[10:8] = INTP;
+      PSR[10:8] = TEMP;
       
       SetSupervisorMode();
-                 
+       INT = 1'b0;          
    endtask // Interrupt
 	 
    task automatic PriveledgeModeException();

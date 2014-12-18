@@ -110,8 +110,10 @@ class Driver;
 		else begin*/
 			repeat(mem_tran_num) @lc3if.cb;
 			lc3if.cb.IRQ <= tr.IRQ;
-			lc3if.cb.INTV <=tr.INTV;
-			lc3if.cb.INTP <= tr.INTP;			
+			if (tr.IRQ == 1) begin
+				lc3if.cb.INTV <=tr.INTV;
+				lc3if.cb.INTP <= tr.INTP;			
+			end
 			lc3if.cb.memory_dout <= tr.DataOut;
 			lc3if.cb.MemoryMappedIO_in <= tr.MemoryMappedIO_in;
 			lc3if.cb.MCR <= tr.MCR;
