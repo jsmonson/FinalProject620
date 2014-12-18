@@ -1,10 +1,10 @@
 covergroup opcode_coverage with function sample(bit ldIR);
 	option.per_instance = 1;
 	
-	// all states have executed
+	// all opcodes have been executed
 	opcodes: coverpoint opcode_c iff (ldIR);
 	
-	// every state has preceded and followed every other states
+	// every opcode has preceded and followed every other opcode
 	preceded_followed: coverpoint opcode_c iff (ldIR) { 
         bins states[] = (tbBR,tbADD,tbLD,tbST,tbJSR,tbAND,tbLDR,tbSTR,tbRTI,tbNOT,tbLDI,tbSTI,tbJMP,tbRES,tbLEA,tbTRAP => 
 						 tbBR,tbADD,tbLD,tbST,tbJSR,tbAND,tbLDR,tbSTR,tbRTI,tbNOT,tbLDI,tbSTI,tbJMP,tbRES,tbLEA,tbTRAP);
@@ -12,10 +12,14 @@ covergroup opcode_coverage with function sample(bit ldIR);
 	
 	// loads precede/follow stores, and vice versa
 	LD_ST: coverpoint opcode_c iff (ldIR) {
-		bins ldst[] = (tbLD,tbLDR,tbLDI,tbLEA => tbST,tbSTR,tbSTI);
-		bins loads[] = (tbLD,tbLDR,tbLDI,tbLEA => tbLD,tbLDR,tbLDI,tbLEA);
+		bins ldst[] = (tbLD,tbLDR,tbLDI => tbST,tbSTR,tbSTI);
+		bins loads[] = (tbLD,tbLDR,tbLDI => tbLD[*2:4]);
+		bins loadrs[] = (tbLD,tbLDR,tbLDI => tbLDR[*2:4]);
+		bins loadi[] = (tbLD,tbLDR,tbLDI => tbLDI[*2:4]);
+		bins stld[] = (tbST,tbSTR,tbSTI => tbLD,tbLDR,tbLDI);
 	}
 
+	
 	// src dst registers have been all registers	
 	src1 : coverpoint $root.top.LC3.IR[8:6] iff ($root.top.LC3.IR[15:12] == tbADD || $root.top.LC3.IR[15:12] == tbAND || $root.top.LC3.IR[15:12] == tbNOT);
 	src : coverpoint $root.top.LC3.IR[11:9] iff ($root.top.LC3.IR[15:12] == tbST ||$root.top.LC3.IR[15:12] == tbSTI || $root.top.LC3.IR[15:12] == tbSTR );
@@ -95,7 +99,7 @@ endgroup
 
 covergroup exception_coverage with function sample(bit ldVector);
 	option.per_instance = 1;
-	exception_vectors: coverpoint $root.top.LC3.DATAPATH.VectorMUX iff($root.top.LC3.selVectorMUX > 0)
+	exception_vectors: coverpoint $root.top.LC3.DATAPATH.VectorMUX iff($root.top.LC3.selVectorMUX > 0 && ldVector)
 	{
 		bins privilege_mode = {0};
 		bins illegal_opcode = {1};
@@ -107,11 +111,11 @@ covergroup address_coverage with function sample(bit ldMAR);
 	option.per_instance = 1;
 	address_ranges: coverpoint $root.top.LC3.DATAPATH.MAR{ 
 		option.auto_bin_max = 256;
-		bins Trap[] = {[16'h0000:16'h00FF]};
+		bins Trap = {[16'h0000:16'h00FF]};
 		bins Interrupt[] = {[16'h0100:16'h01FF]};
 		bins Stacks = {[16'h0200:16'h2FFF]};
 		bins User = {[16'h3000:16'hFDFF]};
-		bins MMAPIO[] = {[16'hFE00:16'hFFFF]};
+		bins MMAPIO = {[16'hFE00:16'hFFFF]};
 	} 
 endgroup
 
