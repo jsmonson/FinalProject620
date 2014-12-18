@@ -89,15 +89,8 @@ covergroup interrupt_coverage with function sample(bit INT);
 	option.per_instance = 1;
 	interrupt: coverpoint INT {option.weight = 0; ignore_bins zero = {0};}
 	vectors: coverpoint $root.top.LC3.INTV;
-	
+	priority_c: coverpoint INTP iff (INT); 
 	interrupt_in_all_states: cross interrupt, opcode_c;
-endgroup
-
-covergroup priority_coverage with function sample(bit[2:0] INTP);
-	option.per_instance = 1;
-	priority_c: coverpoint INTP {option.weight = 0;}
-	interrupt: coverpoint $root.top.lc3_if.IRQ {option.weight = 0; ignore_bins zero = {0};}
-	priority_in_all_interrupts : cross priority_c, interrupt;
 endgroup
 
 covergroup exception_coverage with function sample(bit ldVector);
@@ -127,7 +120,6 @@ class coverClass;
 	states_coverage s_c;
 	reset_coverage r_c;
 	interrupt_coverage i_c;
-	priority_coverage p_c;
 	exception_coverage e_c;
 	address_coverage a_c;
 	function new();
@@ -135,7 +127,6 @@ class coverClass;
 		o_c = new();
 		r_c = new();
 		i_c = new();
-		p_c = new();
 		e_c = new();
 		a_c = new();
 	endfunction
@@ -146,7 +137,6 @@ class coverClass;
 				s_c.sample($root.top.LC3.CONTROL.state);
 				o_c.sample($root.top.LC3.ldIR);
 				i_c.sample($root.top.lc3_if.IRQ);
-				p_c.sample($root.top.lc3_if.INTP);
 				e_c.sample($root.top.LC3.ldVector);
 				a_c.sample($root.top.LC3.ldMAR);
 			end
