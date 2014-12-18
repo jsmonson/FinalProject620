@@ -35,14 +35,14 @@ class MemoryTransaction;
    //Change these later... if necessary
    constraint c_mcr { MCR==16'h8000; }
    constraint c_rst { 
-		rst dist {0:/10, 1:/90 };
+		rst dist {0:/90, 1:/10 };
 	}
    constraint r_cyc { reset_cycles inside {[1:9]}; } 
    constraint c_irq {
 		(rst == 1) -> (IRQ == 0);
 		(rst == 1) -> (INTV == 0);
 		(rst == 1) -> (INTP == 0);
-		IRQ dist {0:/1, 1:/99 }; 
+		IRQ dist {0:/70, 1:/30 }; 
    }
  
    

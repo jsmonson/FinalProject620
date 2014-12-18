@@ -73,7 +73,7 @@ endgroup
 
 covergroup states_coverage with function sample(bit[5:0] state);
 	option.per_instance = 1;
-	
+	// all states have been reached
 	states: coverpoint $root.top.LC3.CONTROL.state { ignore_bins nonexistant = {[$root.top.LC3.CONTROL.num_states:63]}; }
 endgroup 
 
@@ -91,7 +91,7 @@ endgroup
 
 covergroup MCR_coverage with function sample(bit mcr_15 );
 	option.per_instance = 1;
-	mcr_15: coverpoint mcr_15 iff (!$root.top.lc3_if.rst) {ignore_bins zero = {1};}
+	mcr_15: coverpoint mcr_15 iff (!$root.top.lc3_if.rst) {ignore_bins one = {1};}
 endgroup
 
 covergroup interrupt_coverage with function sample(bit INT);
@@ -99,7 +99,8 @@ covergroup interrupt_coverage with function sample(bit INT);
 	interrupt: coverpoint INT {option.weight = 0; ignore_bins zero = {0};}
 	vectors: coverpoint $root.top.LC3.INTV;
 	priority_c: coverpoint $root.top.LC3.INTP iff (INT); 
-	interrupt_in_all_states: cross interrupt, $root.top.LC3.CONTROL.state; // need to ignore EXC
+	/// interrupt in all states
+	interrupt_in_all_states: cross interrupt, $root.top.LC3.CONTROL.state;
 endgroup
 
 covergroup exception_coverage with function sample(bit ldVector);
