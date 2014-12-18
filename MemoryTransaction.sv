@@ -36,7 +36,7 @@ class MemoryTransaction;
    constraint c_rst { 
 		rst dist {0:/70, 1:/30 };
 	};
-   constraint r_cyc { reset_cycles == 1; }; 
+   constraint r_cyc { reset_cycles inside {[0:9]}; } 
    constraint c_irq { IRQ == 0; };
  
    
