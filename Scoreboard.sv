@@ -177,7 +177,8 @@ class Scoreboard;
 	  opcode = CurT.MemoryMappedIO_in[15:12];
 	else
 	  opcode = CurT.Opcode; 
-	       
+	 $display("in case reset:    %0d",reset);  
+$display("INTV %X INTP %X PSR %X", INTV, INTP, PSR);	 
 	case (opcode) 
 	  tbBR: LC3_BR();
           tbADD: LC3_ADD();
@@ -202,6 +203,7 @@ class Scoreboard;
      end // else: !if(CurT.INT)
 
      reset_tmp = reset;
+	 $display("reset:    %0d",reset);
      if(reset)
        reset_sb();
 
@@ -488,11 +490,8 @@ class Scoreboard;
 	 SaveUSPLoadSSP();
       end
 	  
-	  $display("INTV %X", INTV);
-	  $display("INTP %X", INTP);
 	  TEMP = INTP;
       SavePSRAndPCLoadVector({8'h01,INTV});
-		$display("INTP2 %X", INTP);
       //Update PSR Priority
       PSR[10:8] = TEMP;
       
